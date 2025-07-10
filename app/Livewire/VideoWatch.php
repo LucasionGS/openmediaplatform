@@ -2,21 +2,22 @@
 
 namespace App\Livewire;
 
+use Livewire\Component;
 use App\Models\Video;
 use App\Models\Comment;
 use App\Models\VideoEngagement;
 use App\Models\WatchHistory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Livewire\Component;
 
-class VideoViewPage extends Component
+class VideoWatch extends Component
 {
     public Video $video;
     public $newComment = '';
     public $replyTo = null;
     public $replyContent = '';
     public $userEngagement = null;
+    public $showReplies = [];
 
     public function mount(Video $video)
     {
@@ -27,16 +28,14 @@ class VideoViewPage extends Component
         
         // Load user engagement if logged in
         if (Auth::check()) {
-            $this->userEngagement = $this->video->engagements()
-                ->where('user_id', Auth::id())
-                ->first();
+            $this->userEngagement = $this->video->userEngagement(Auth::id());
         }
     }
 
     public function recordView()
     {
         // Increment video views
-        $this->video->increment('views');
+        $this->video->incrementViews();
         
         // Record in watch history
         WatchHistory::create([
@@ -53,21 +52,35 @@ class VideoViewPage extends Component
             return redirect()->route('login');
         }
 
-        $engagement = VideoEngagement::firstOrCreate([
+        $engagement = VideoEngagement::where([
             'video_id' => $this->video->vid,
             'user_id' => Auth::id(),
-        ]);
+        ])->first();
 
-        if ($engagement->engagement_type === 'like') {
-            $engagement->delete();
-            $this->userEngagement = null;
+        if ($engagement) {
+            if ($engagement->engagement_type === 'like') {
+                // User already liked, remove the like
+                $engagement->delete();
+                $this->userEngagement = null;
+            } else {
+                // User disliked before, change to like
+                $engagement->engagement_type = 'like';
+                $engagement->save();
+                $this->userEngagement = $engagement;
+            }
         } else {
-            $engagement->engagement_type = 'like';
-            $engagement->save();
+            // Create new like engagement
+            $engagement = VideoEngagement::create([
+                'video_id' => $this->video->vid,
+                'user_id' => Auth::id(),
+                'engagement_type' => 'like',
+            ]);
             $this->userEngagement = $engagement;
         }
 
-        $this->updateEngagementCounts();
+        $this->video->updateLikesCount();
+        $this->video->updateDislikesCount();
+        $this->video->refresh();
     }
 
     public function toggleDislike()
@@ -76,28 +89,34 @@ class VideoViewPage extends Component
             return redirect()->route('login');
         }
 
-        $engagement = VideoEngagement::firstOrCreate([
+        $engagement = VideoEngagement::where([
             'video_id' => $this->video->vid,
             'user_id' => Auth::id(),
-        ]);
+        ])->first();
 
-        if ($engagement->engagement_type === 'dislike') {
-            $engagement->delete();
-            $this->userEngagement = null;
+        if ($engagement) {
+            if ($engagement->engagement_type === 'dislike') {
+                // User already disliked, remove the dislike
+                $engagement->delete();
+                $this->userEngagement = null;
+            } else {
+                // User liked before, change to dislike
+                $engagement->engagement_type = 'dislike';
+                $engagement->save();
+                $this->userEngagement = $engagement;
+            }
         } else {
-            $engagement->engagement_type = 'dislike';
-            $engagement->save();
+            // Create new dislike engagement
+            $engagement = VideoEngagement::create([
+                'video_id' => $this->video->vid,
+                'user_id' => Auth::id(),
+                'engagement_type' => 'dislike',
+            ]);
             $this->userEngagement = $engagement;
         }
 
-        $this->updateEngagementCounts();
-    }
-
-    private function updateEngagementCounts()
-    {
-        $this->video->likes = $this->video->engagements()->where('engagement_type', 'like')->count();
-        $this->video->dislikes = $this->video->engagements()->where('engagement_type', 'dislike')->count();
-        $this->video->save();
+        $this->video->updateLikesCount();
+        $this->video->updateDislikesCount();
         $this->video->refresh();
     }
 
@@ -118,7 +137,8 @@ class VideoViewPage extends Component
         ]);
 
         $this->newComment = '';
-        $this->updateCommentsCount();
+        $this->video->updateCommentsCount();
+        $this->video->refresh();
     }
 
     public function addReply()
@@ -140,7 +160,8 @@ class VideoViewPage extends Component
 
         $this->replyContent = '';
         $this->replyTo = null;
-        $this->updateCommentsCount();
+        $this->video->updateCommentsCount();
+        $this->video->refresh();
     }
 
     public function setReplyTo($commentId)
@@ -154,34 +175,33 @@ class VideoViewPage extends Component
         $this->replyContent = '';
     }
 
-    private function updateCommentsCount()
+    public function toggleReplies($commentId)
     {
-        $this->video->comments = $this->video->comments()->count();
-        $this->video->save();
-        $this->video->refresh();
+        if (isset($this->showReplies[$commentId])) {
+            unset($this->showReplies[$commentId]);
+        } else {
+            $this->showReplies[$commentId] = true;
+        }
     }
 
     public function render()
     {
-        $comments = $this->video->comments()
-            ->whereNull('parent_id')
+        $comments = $this->video->topLevelComments()
             ->with(['user', 'replies.user'])
             ->latest()
             ->get();
 
-        $relatedVideos = Video::where('visibility', Video::VISIBILITY_PUBLIC)
+        $relatedVideos = Video::public()
             ->with(['user'])
             ->where('vid', '!=', $this->video->vid)
             ->when($this->video->category, function ($query) {
-                $query->where('category', $this->video->category);
+                $query->byCategory($this->video->category);
             })
             ->inRandomOrder()
             ->limit(10)
             ->get();
 
-        return view('livewire.video-view-page', [
-            'video' => $this->video,
-            'videoUrl' => route('videos.raw', $this->video),
+        return view('livewire.video-watch', [
             'comments' => $comments,
             'relatedVideos' => $relatedVideos,
         ]);

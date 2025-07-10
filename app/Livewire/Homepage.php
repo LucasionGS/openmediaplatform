@@ -2,46 +2,37 @@
 
 namespace App\Livewire;
 
-use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Video;
-use Livewire\WithPagination;
+use App\Models\User;
 
-#[Title('OpenMediaPlatform - Home')]
-class FrontPage extends Component
+class Homepage extends Component
 {
-    use WithPagination;
-
     public $selectedCategory = 'all';
     public $searchQuery = '';
-
-    protected $queryString = [
-        'selectedCategory' => ['except' => 'all'],
-        'searchQuery' => ['except' => ''],
-    ];
-
+    
     public function mount()
     {
-        $this->searchQuery = request('q', '');
+        // Initialize component
     }
 
     public function updatedSelectedCategory()
     {
-        $this->resetPage();
+        $this->dispatch('categoryChanged', $this->selectedCategory);
     }
 
-    public function updatedSearchQuery()
+    public function search()
     {
-        $this->resetPage();
+        $this->dispatch('searchPerformed', $this->searchQuery);
     }
 
     public function render()
     {
         $videos = Video::query()
-            ->where('visibility', Video::VISIBILITY_PUBLIC)
+            ->public()
             ->with(['user'])
             ->when($this->selectedCategory !== 'all', function ($query) {
-                $query->where('category', $this->selectedCategory);
+                $query->byCategory($this->selectedCategory);
             })
             ->when($this->searchQuery, function ($query) {
                 $query->where(function ($q) {
@@ -50,7 +41,7 @@ class FrontPage extends Component
                 });
             })
             ->latest('published_at')
-            ->paginate(20);
+            ->paginate(24);
 
         $categories = [
             'all' => 'All',
@@ -66,9 +57,9 @@ class FrontPage extends Component
             'lifestyle' => 'Lifestyle',
         ];
 
-        return view('livewire.front-page', [
+        return view('livewire.homepage', [
             'videos' => $videos,
             'categories' => $categories,
-        ]);
+        ])->layout('components.layouts.app');
     }
 }

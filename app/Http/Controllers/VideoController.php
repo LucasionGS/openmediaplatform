@@ -60,32 +60,86 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
-        $request->validate([
-            'video' => 'required|mimes:mp4,mov,avi,wmv',
-        ]);
-
-        // Video file only, populate with default values
-        $video = new Video();
-        $video->title = "New Video";
-        $video->description = "";
-        $video->visibility = Video::VISIBILITY_UPLOADING;
-        $video->duration = 0;
-        $video->save();
-
-        // Store the video file
-        $request->file('video')->storeAs('videos', $video->vid, 'public');
-        $video->duration = $video->calculateDuration();
-        $video->generateThumbnail($video->duration / 2);
-
-        if ($video->visibility == Video::VISIBILITY_UPLOADING) {
-            $video->visibility = Video::VISIBILITY_UNPUBLISHED;
+        // Ensure user is authenticated
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'You must be signed in to upload videos.');
         }
 
-        $video->save();
+        try {
+            // Check for upload errors
+            $uploadError = $request->file('video') ? $request->file('video')->getError() : UPLOAD_ERR_NO_FILE;
+            
+            if ($uploadError !== UPLOAD_ERR_OK) {
+                $errorMessages = [
+                    UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the maximum file size allowed by the server.',
+                    UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the maximum file size specified in the form.',
+                    UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded.',
+                    UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                    UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload.',
+                ];
+                
+                $message = $errorMessages[$uploadError] ?? 'An unknown upload error occurred.';
+                return back()->withErrors(['video' => $message])->withInput();
+            }
 
-        return redirect()->route('videos.edit', ['video' => $video->vid])
-            ->with('success', 'Video uploaded successfully');
+            // Validate the request
+            $request->validate([
+                'video' => 'required|file|mimes:mp4,mov,avi,wmv,mkv,flv,webm|max:' . (500 * 1024), // 500MB in KB
+                'title' => 'required|string|max:100',
+                'description' => 'nullable|string|max:1000',
+                'category' => 'nullable|string|max:50',
+                'tags' => 'nullable|string|max:500',
+                'visibility' => 'required|in:public,private,unlisted',
+            ], [
+                'video.max' => 'The video file must not be larger than 500MB.',
+                'video.mimes' => 'The video must be a file of type: mp4, mov, avi, wmv, mkv, flv, webm.',
+            ]);
+
+            // Create video record
+            $video = new Video();
+            $video->title = $request->title;
+            $video->description = $request->description;
+            $video->category = $request->category;
+            $video->visibility = $request->visibility === 'public' ? Video::VISIBILITY_PUBLIC : 
+                                ($request->visibility === 'private' ? Video::VISIBILITY_PRIVATE : Video::VISIBILITY_UNLISTED);
+            $video->user_id = auth()->id();
+            $video->published_at = $request->visibility === 'public' ? now() : null;
+            
+            // Process tags
+            if ($request->tags) {
+                $tags = array_map('trim', explode(',', $request->tags));
+                $tags = array_filter($tags); // Remove empty tags
+                $video->tags = $tags;
+            }
+
+            $video->save();
+
+            // Store the video file
+            $videoFile = $request->file('video');
+            $videoFile->storeAs('videos', $video->vid, 'public');
+            
+            // Calculate duration and generate thumbnail
+            $video->duration = $video->calculateDuration(save: true);
+            $video->generateThumbnail($video->duration / 2);
+
+            $video->save();
+
+            return redirect()->route('videos.edit', ['video' => $video->vid])
+                ->with('message', 'Video uploaded successfully! You can now edit the details.');
+
+        } catch (\Exception $e) {
+            \Log::error('Video upload failed: ' . $e->getMessage());
+            
+            // Check if it's a file size error
+            if (strpos($e->getMessage(), 'file is too large') !== false || 
+                strpos($e->getMessage(), 'POST Content-Length') !== false) {
+                return back()->withErrors(['video' => 'The video file is too large. Please ensure your video is under 500MB and try again.'])->withInput();
+            }
+            
+            return back()->withErrors(['video' => 'An error occurred while uploading your video. Please try again.'])->withInput();
+        }
     }
 
     public function raw(Video $video)

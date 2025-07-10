@@ -3,30 +3,22 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Title;
 
+#[Title('Upload Video - OpenMediaPlatform')]
 class UploadPage extends Component
 {
-    use \Livewire\WithFileUploads;
-    public $video;
-    public string $error = '';
-    public function render()
+    public function mount()
     {
-        return view('livewire.upload-page');
+        // Require authentication to access upload page
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('message', 'You must be signed in to upload videos.');
+        }
     }
 
-    public function upload()
+    public function render()
     {
-        $this->error = '';
-        $this->validate([
-            'video' => 'required|mimes:mp4,mov,avi,wmv', // 10MB max
-        ]);
-
-        // Store the video
-        $path = $this->video->store('videos');
-
-        // Save the video information to the database
-        // Video::create(['path' => $path]);
-
-        session()->flash('message', 'Video uploaded successfully.');
+        return view('livewire.upload-page')
+            ->layout('components.layouts.app');
     }
 }

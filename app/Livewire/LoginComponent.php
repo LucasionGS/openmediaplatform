@@ -2,45 +2,67 @@
 
 namespace App\Livewire;
 
-use App\Http\Controllers\UserController;
-use App\Models\User;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Request;
+use Livewire\Attributes\Title;
 
+#[Title('Sign In - OpenMediaPlatform')]
 class LoginComponent extends Component
 {
-    public $buttonText = 'Login';
+    public $email = '';
+    public $password = '';
+    public $buttonText = 'Sign In';
     public $error = '';
-    public function render()
-    {
-        return view('livewire.login-component');
-    }
+    public $remember = false;
 
-    public string $email = '';
-    public string $password = '';
+    protected $rules = [
+        'email' => 'required|email',
+        'password' => 'required',
+    ];
+
+    protected $messages = [
+        'email.required' => 'Email is required.',
+        'email.email' => 'Please enter a valid email address.',
+        'password.required' => 'Password is required.',
+    ];
 
     public function login()
     {
-        // Set the button text to "Logging in..."
-        $this->buttonText = 'Logging in...';
+        $this->buttonText = 'Signing In...';
         $this->error = '';
-        
-    
-        // call the login API
-        if (Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            $this->buttonText = 'Login successful';
-            // Redirect or perform any other action
-            return redirect()->route('home');
-        } else {
-            $this->error = 'Invalid credentials';
-            $this->buttonText = 'Login';
 
-            User::create([
-                'name' => explode('@', $this->email)[0],
-                'email' => $this->email,
-                'password' => bcrypt($this->password),
-            ]);
+        try {
+            $this->validate();
+
+            // Attempt to log the user in
+            if (Auth::attempt([
+                'email' => $this->email, 
+                'password' => $this->password
+            ], $this->remember)) {
+                $this->buttonText = 'Sign In Successful';
+                
+                // Regenerate session to prevent session fixation
+                session()->regenerate();
+                
+                // Redirect to intended page or home
+                return redirect()->intended(route('home'));
+            } else {
+                $this->error = 'Invalid email or password. Please try again.';
+                $this->buttonText = 'Sign In';
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->buttonText = 'Sign In';
+            $this->error = collect($e->errors())->flatten()->first();
+        } catch (\Exception $e) {
+            $this->buttonText = 'Sign In';
+            $this->error = 'An error occurred while signing in. Please try again.';
         }
+    }
+
+    public function render()
+    {
+        return view('livewire.login-component')
+            ->layout('components.layouts.app');
     }
 }
