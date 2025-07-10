@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $title ?? 'OpenMediaPlatform' }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
         @livewireStyles
@@ -61,8 +62,16 @@
                             </svg>
                         </button>
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:bg-blue-600">
-                                {{ substr(auth()->user()->name, 0, 1) }}
+                            <button @click="open = !open" class="flex items-center justify-center hover:opacity-80 transition-opacity">
+                                @if(auth()->user()->profile_picture)
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
+                                         alt="{{ auth()->user()->name }}" 
+                                         class="w-8 h-8 rounded-full object-cover">
+                                @else
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:bg-blue-600">
+                                        {{ substr(auth()->user()->name, 0, 1) }}
+                                    </div>
+                                @endif
                             </button>
                             <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
                                 <div class="py-1">
@@ -70,7 +79,7 @@
                                         {{ auth()->user()->name }}
                                     </div>
                                     <a href="{{ route('channel.show', auth()->user()) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Channel</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                    <a href="{{ route('profile.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -112,18 +121,11 @@
                         </a>
 
                         @auth
-                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
+                        <a href="{{ route('library') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
                             </svg>
                             <span>Library</span>
-                        </a>
-                        
-                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/>
-                            </svg>
-                            <span>History</span>
                         </a>
                         @endauth
                         

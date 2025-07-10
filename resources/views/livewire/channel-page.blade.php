@@ -1,14 +1,29 @@
 <div>
     <!-- Channel Header -->
     <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <!-- Channel Banner -->
+        @if($user->channel_banner)
+            <div class="w-full h-32 md:h-48 lg:h-64 bg-gray-100 overflow-hidden">
+                <img src="{{ asset('storage/' . $user->channel_banner) }}" 
+                     alt="{{ $user->getChannelName() }} Banner" 
+                     class="w-full h-full object-cover">
+            </div>
+        @endif
+        
         <div class="max-w-7xl mx-auto px-4 py-6">
             <!-- Channel Info -->
             <div class="flex items-start space-x-6">
                 <!-- Channel Avatar -->
                 <div class="flex-shrink-0">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                        {{ substr($user->getChannelName(), 0, 1) }}
-                    </div>
+                    @if($user->profile_picture)
+                        <img src="{{ asset('storage/' . $user->profile_picture) }}" 
+                             alt="{{ $user->getChannelName() }}" 
+                             class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg">
+                    @else
+                        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-lg">
+                            {{ substr($user->getChannelName(), 0, 1) }}
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Channel Details -->
@@ -84,7 +99,7 @@
             <!-- Videos Tab -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 @forelse($videos as $video)
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group">
                         <a href="{{ route('videos.show', $video) }}" class="block">
                             <!-- Thumbnail -->
                             <div class="relative aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
@@ -112,6 +127,22 @@
                                 </div>
                             </div>
                         </a>
+
+                        <!-- Edit Button (Only for Channel Owner) -->
+                        @auth
+                            @if(auth()->id() === $user->id)
+                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{{ route('videos.edit', $video) }}" 
+                                       class="inline-flex items-center justify-center w-8 h-8 bg-black bg-opacity-75 text-white rounded-full hover:bg-opacity-100 transition-all"
+                                       title="Edit video"
+                                       onclick="event.stopPropagation();">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </a>
+                                </div>
+                            @endif
+                        @endauth
                     </div>
                 @empty
                     <div class="col-span-full text-center py-12">

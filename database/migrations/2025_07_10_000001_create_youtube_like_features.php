@@ -92,9 +92,10 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('channel_name')->nullable()->after('name');
             $table->text('channel_description')->nullable()->after('channel_name');
-            $table->string('avatar')->nullable()->after('channel_description');
-            $table->string('banner')->nullable()->after('avatar');
-            $table->unsignedInteger('subscribers_count')->default(0)->after('banner');
+            $table->string('profile_picture')->nullable()->after('channel_description');
+            $table->string('channel_banner')->nullable()->after('profile_picture');
+            $table->json('channel_links')->nullable()->after('channel_banner');
+            $table->unsignedInteger('subscribers_count')->default(0)->after('channel_links');
             $table->timestamp('channel_created_at')->nullable()->after('subscribers_count');
         });
     }
@@ -102,7 +103,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['channel_name', 'channel_description', 'avatar', 'banner', 'subscribers_count', 'channel_created_at']);
+            $table->dropColumn(['channel_name', 'channel_description', 'profile_picture', 'channel_banner', 'channel_links', 'subscribers_count', 'channel_created_at']);
         });
         
         Schema::dropIfExists('comment_engagements');

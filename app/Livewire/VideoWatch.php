@@ -130,15 +130,27 @@ class VideoWatch extends Component
             'newComment' => 'required|string|max:1000',
         ]);
 
-        Comment::create([
-            'video_id' => $this->video->vid,
-            'user_id' => Auth::id(),
-            'content' => $this->newComment,
-        ]);
+        try {
+            Comment::create([
+                'video_id' => $this->video->vid,
+                'user_id' => Auth::id(),
+                'content' => trim($this->newComment),
+            ]);
 
-        $this->newComment = '';
-        $this->video->updateCommentsCount();
-        $this->video->refresh();
+            $this->newComment = '';
+            $this->video->updateCommentsCount();
+            $this->video->refresh();
+            
+            // Add a success message
+            session()->flash('comment_success', 'Comment added successfully!');
+            
+            // Dispatch browser event to reset button state
+            $this->dispatch('comment-posted');
+            
+        } catch (\Exception $e) {
+            $this->addError('newComment', 'Failed to add comment. Please try again.');
+            \Log::error('Comment creation failed: ' . $e->getMessage());
+        }
     }
 
     public function addReply()
@@ -151,17 +163,26 @@ class VideoWatch extends Component
             'replyContent' => 'required|string|max:1000',
         ]);
 
-        Comment::create([
-            'video_id' => $this->video->vid,
-            'user_id' => Auth::id(),
-            'parent_id' => $this->replyTo,
-            'content' => $this->replyContent,
-        ]);
+        try {
+            Comment::create([
+                'video_id' => $this->video->vid,
+                'user_id' => Auth::id(),
+                'parent_id' => $this->replyTo,
+                'content' => trim($this->replyContent),
+            ]);
 
-        $this->replyContent = '';
-        $this->replyTo = null;
-        $this->video->updateCommentsCount();
-        $this->video->refresh();
+            $this->replyContent = '';
+            $this->replyTo = null;
+            $this->video->updateCommentsCount();
+            $this->video->refresh();
+            
+            // Add a success message
+            session()->flash('reply_success', 'Reply added successfully!');
+            
+        } catch (\Exception $e) {
+            $this->addError('replyContent', 'Failed to add reply. Please try again.');
+            \Log::error('Reply creation failed: ' . $e->getMessage());
+        }
     }
 
     public function setReplyTo($commentId)
@@ -197,7 +218,8 @@ class VideoWatch extends Component
             ->when($this->video->category, function ($query) {
                 $query->byCategory($this->video->category);
             })
-            ->inRandomOrder()
+            ->orderBy('views', 'desc')
+            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 

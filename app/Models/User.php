@@ -25,8 +25,9 @@ class User extends Authenticatable
         'password',
         'channel_name',
         'channel_description',
-        'avatar',
-        'banner',
+        'profile_picture',
+        'channel_banner',
+        'channel_links',
         'subscribers_count',
         'channel_created_at',
     ];
@@ -52,6 +53,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'channel_created_at' => 'datetime',
+            'channel_links' => 'array',
         ];
     }
 
@@ -109,12 +111,12 @@ class User extends Authenticatable
 
     public function getAvatarUrl(): string
     {
-        return $this->avatar ? asset('storage/' . $this->avatar) : asset('images/default-avatar.png');
+        return $this->profile_picture ? asset('storage/' . $this->profile_picture) : asset('images/default-avatar.png');
     }
 
     public function getBannerUrl(): ?string
     {
-        return $this->banner ? asset('storage/' . $this->banner) : null;
+        return $this->channel_banner ? asset('storage/' . $this->channel_banner) : null;
     }
 
     public function updateSubscribersCount(): void

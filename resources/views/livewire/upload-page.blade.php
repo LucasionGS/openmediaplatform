@@ -36,7 +36,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                         </svg>
                         <p class="text-lg text-gray-600 mb-2">Click to select or drag and drop your video</p>
-                        <p class="text-sm text-gray-500">MP4, MOV, AVI, MKV, FLV, WMV, WEBM (Max: 500MB)</p>
+                        <p class="text-sm text-gray-500">MP4, MOV, AVI, MKV, FLV, WMV, WEBM (Max: {{ $maxUploadSizeFormatted }})</p>
                     </div>
 
                     <div id="fileInfo" class="hidden mt-4 p-4 bg-gray-50 rounded">
@@ -66,103 +66,127 @@
             </div>
 
             <!-- Video Information -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
-                        Video Title *
+            <!-- Video Details Section -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Video Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                            Video Title *
+                        </label>
+                        <input type="text" 
+                               id="title" 
+                               name="title" 
+                               required
+                               maxlength="100"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                               placeholder="Enter video title">
+                        @error('title')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+                            Category
+                        </label>
+                        <select id="category" 
+                                name="category"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
+                            <option value="">Select a category</option>
+                            <option value="music">Music</option>
+                            <option value="gaming">Gaming</option>
+                            <option value="sports">Sports</option>
+                            <option value="news">News</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="education">Education</option>
+                            <option value="technology">Technology</option>
+                            <option value="travel">Travel</option>
+                            <option value="food">Food</option>
+                            <option value="lifestyle">Lifestyle</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
                     </label>
-                    <input type="text" 
-                           id="title" 
-                           name="title" 
-                           required
-                           maxlength="100"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Enter video title">
-                    @error('title')
+                    <textarea id="description" 
+                              name="description" 
+                              rows="4"
+                              maxlength="1000"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-none"
+                              placeholder="Tell viewers about your video"></textarea>
+                    @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div>
-                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
-                        Category
+                <div class="mb-6">
+                    <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tags
                     </label>
-                    <select id="category" 
-                            name="category"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Select a category</option>
-                        <option value="music">Music</option>
-                        <option value="gaming">Gaming</option>
-                        <option value="sports">Sports</option>
-                        <option value="news">News</option>
-                        <option value="entertainment">Entertainment</option>
-                        <option value="education">Education</option>
-                        <option value="technology">Technology</option>
-                        <option value="travel">Travel</option>
-                        <option value="food">Food</option>
-                        <option value="lifestyle">Lifestyle</option>
-                    </select>
+                    <input type="text" 
+                           id="tags" 
+                           name="tags"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                           placeholder="e.g. tutorial, coding, web development">
+                    <p class="mt-1 text-sm text-gray-500">Separate tags with commas to help people find your video</p>
                 </div>
             </div>
 
-            <div class="mb-6">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                </label>
-                <textarea id="description" 
-                          name="description" 
-                          rows="4"
-                          maxlength="1000"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Tell viewers about your video"></textarea>
-                @error('description')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div class="mb-6">
-                <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">
-                    Tags (comma separated)
-                </label>
-                <input type="text" 
-                       id="tags" 
-                       name="tags"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="e.g. tutorial, coding, web development">
-                <p class="mt-1 text-sm text-gray-500">Separate tags with commas to help people find your video</p>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Visibility
-                </label>
-                <div class="space-y-2">
-                    <label class="flex items-center">
-                        <input type="radio" name="visibility" value="public" checked class="form-radio">
-                        <span class="ml-2">Public - Anyone can search for and view</span>
+            <!-- Privacy & Publishing -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Privacy & Publishing</h2>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Who can see this video?
                     </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="visibility" value="unlisted" class="form-radio">
-                        <span class="ml-2">Unlisted - Anyone with the link can view</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="visibility" value="private" class="form-radio">
-                        <span class="ml-2">Private - Only you can view</span>
-                    </label>
+                    <div class="space-y-3">
+                        <label class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+                            <input type="radio" name="visibility" value="public" checked 
+                                   class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 focus:ring-red-500 focus:ring-2 mt-1">
+                            <div class="ml-3">
+                                <div class="font-medium text-gray-900 group-hover:text-red-600">Public</div>
+                                <div class="text-sm text-gray-500">Anyone can search for and view this video</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+                            <input type="radio" name="visibility" value="unlisted" 
+                                   class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 focus:ring-red-500 focus:ring-2 mt-1">
+                            <div class="ml-3">
+                                <div class="font-medium text-gray-900 group-hover:text-red-600">Unlisted</div>
+                                <div class="text-sm text-gray-500">Anyone with the link can view this video</div>
+                            </div>
+                        </label>
+                        <label class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+                            <input type="radio" name="visibility" value="private" 
+                                   class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 focus:ring-red-500 focus:ring-2 mt-1">
+                            <div class="ml-3">
+                                <div class="font-medium text-gray-900 group-hover:text-red-600">Private</div>
+                                <div class="text-sm text-gray-500">Only you can view this video</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <!-- Submit Buttons -->
-            <div class="flex justify-end space-x-3">
+            <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-gray-200">
                 <button type="button" 
-                        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                        class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
                     Save as Draft
                 </button>
                 <button type="submit" 
                         id="uploadBtn"
                         disabled
-                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
-                    Upload Video
+                        class="px-8 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium">
+                    <span id="uploadText">Upload Video</span>
+                    <svg id="uploadSpinner" class="hidden animate-spin -mr-1 ml-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
             </div>
         </form>
@@ -170,7 +194,7 @@
 </div>
 
 <script>
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+const MAX_FILE_SIZE = {{ $maxUploadSize }}; // Dynamic limit from PHP configuration
 
 function handleFileSelect(input) {
     const file = input.files[0];
@@ -183,7 +207,7 @@ function handleFileSelect(input) {
 
     // Check file size
     if (file.size > MAX_FILE_SIZE) {
-        alert(`File size (${formatFileSize(file.size)}) exceeds the maximum limit of 500MB. Please choose a smaller file.`);
+        alert(`File size (${formatFileSize(file.size)}) exceeds the maximum limit of {{ $maxUploadSizeFormatted }}. Please choose a smaller file.`);
         input.value = '';
         clearFile();
         return;
@@ -276,22 +300,95 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     // Show progress
     document.getElementById('progressContainer').classList.remove('hidden');
     document.getElementById('uploadBtn').disabled = true;
-    document.getElementById('uploadBtn').textContent = 'Uploading...';
+    document.getElementById('uploadText').textContent = 'Uploading...';
+    document.getElementById('uploadSpinner').classList.remove('hidden');
     
-    // Simulate progress (in a real implementation, you'd use XHR or fetch with progress tracking)
-    let progress = 0;
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
+    // Real upload with XMLHttpRequest for progress tracking
+    e.preventDefault();
     
-    const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
+    const formData = new FormData(this);
+    const xhr = new XMLHttpRequest();
+    
+    // Track upload progress
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            document.getElementById('progressBar').style.width = percentComplete + '%';
+            document.getElementById('progressText').textContent = `Uploading... ${Math.round(percentComplete)}%`;
+        }
+    });
+    
+    // Handle completion
+    xhr.addEventListener('load', function() {
+        console.log('Upload completed with status:', xhr.status);
+        console.log('Response text:', xhr.responseText);
         
-        progressBar.style.width = progress + '%';
-        progressText.textContent = `Uploading... ${Math.round(progress)}%`;
-    }, 500);
+        if (xhr.status === 200) {
+            document.getElementById('progressText').textContent = 'Upload complete! Processing...';
+            // Parse response and redirect
+            try {
+                const response = JSON.parse(xhr.responseText);
+                console.log('Parsed response:', response);
+                
+                if (response.success && response.redirect) {
+                    console.log('Redirecting to:', response.redirect);
+                    window.location.href = response.redirect;
+                } else if (response.redirect) {
+                    console.log('Redirecting to:', response.redirect);
+                    window.location.href = response.redirect;
+                } else {
+                    console.log('No redirect found, going to homepage');
+                    // Fallback - go to videos list or reload
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                console.error('Error parsing response:', e);
+                console.log('Response text:', xhr.responseText);
+                // Try to redirect anyway or reload
+                window.location.href = '/';
+            }
+        } else {
+            // Handle HTTP errors
+            try {
+                const response = JSON.parse(xhr.responseText);
+                document.getElementById('progressText').textContent = response.message || 'Upload failed. Please try again.';
+            } catch (e) {
+                document.getElementById('progressText').textContent = 'Upload failed. Please try again.';
+            }
+            document.getElementById('progressBar').classList.remove('bg-blue-600');
+            document.getElementById('progressBar').classList.add('bg-red-500');
+            resetUploadButton();
+        }
+    });
     
-    // Clear interval after 30 seconds (form should submit by then)
-    setTimeout(() => clearInterval(interval), 30000);
+    // Handle errors
+    xhr.addEventListener('error', function() {
+        document.getElementById('progressText').textContent = 'Upload failed. Please check your connection.';
+        document.getElementById('progressBar').classList.remove('bg-blue-600');
+        document.getElementById('progressBar').classList.add('bg-red-500');
+        resetUploadButton();
+    });
+    
+    // Handle timeout
+    xhr.addEventListener('timeout', function() {
+        document.getElementById('progressText').textContent = 'Upload timed out. Please try again.';
+        document.getElementById('progressBar').classList.remove('bg-blue-600');
+        document.getElementById('progressBar').classList.add('bg-red-500');
+        resetUploadButton();
+    });
+    
+    // Set timeout to 15 minutes
+    xhr.timeout = 900000;
+    
+    // Start upload
+    xhr.open('POST', this.action);
+    xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    xhr.send(formData);
 });
+
+function resetUploadButton() {
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('uploadText').textContent = 'Upload Video';
+    document.getElementById('uploadSpinner').classList.add('hidden');
+}
 </script>

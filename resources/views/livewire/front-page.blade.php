@@ -37,9 +37,15 @@
                     <div class="flex space-x-3">
                         <!-- Channel Avatar -->
                         <div class="flex-shrink-0">
-                            <div class="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                {{ substr($video->user ? $video->user->name : 'U', 0, 1) }}
-                            </div>
+                            @if($video->user && $video->user->profile_picture)
+                                <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                     alt="{{ $video->user->name }}" 
+                                     class="w-9 h-9 rounded-full object-cover">
+                            @else
+                                <div class="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                    {{ substr($video->user ? $video->user->name : 'U', 0, 1) }}
+                                </div>
+                            @endif
                         </div>
                         
                         <!-- Video Details -->

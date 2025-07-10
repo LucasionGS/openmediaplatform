@@ -10,7 +10,8 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^3.6",
-        "pawlox/video-thumbnail": "^5.2"
+        "pawlox/video-thumbnail": "^5.2",
+        "php-ffmpeg/php-ffmpeg": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

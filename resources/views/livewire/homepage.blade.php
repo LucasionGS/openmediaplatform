@@ -37,9 +37,15 @@
                         <div class="flex space-x-3">
                             <div class="flex-shrink-0">
                                 <a href="{{ $video->user ? route('channel.show', $video->user) : '#' }}">
-                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:bg-blue-600 transition-colors">
-                                        {{ substr($video->user ? $video->user->getChannelName() : 'Unknown', 0, 1) }}
-                                    </div>
+                                    @if($video->user && $video->user->profile_picture)
+                                        <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                             alt="{{ $video->user->getChannelName() }}" 
+                                             class="w-8 h-8 rounded-full object-cover hover:opacity-80 transition-opacity">
+                                    @else
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:bg-blue-600 transition-colors">
+                                            {{ substr($video->user ? $video->user->getChannelName() : 'Unknown', 0, 1) }}
+                                        </div>
+                                    @endif
                                 </a>
                             </div>
                             <div class="flex-1 min-w-0">

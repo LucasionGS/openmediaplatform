@@ -3,15 +3,14 @@
         <!-- Main Video Section -->
         <div class="lg:col-span-2">
             <!-- Video Player -->
-            <div class="bg-black rounded-lg overflow-hidden aspect-video">
-                <video id="videoPlayer" 
-                       controls 
-                       class="w-full h-full"
-                       onloadedmetadata="updateWatchTime()"
-                       ontimeupdate="updateWatchTime()">
-                    <source src="{{ route('videos.raw', $video) }}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
+            <div class="bg-black rounded-lg overflow-hidden">
+                <livewire:video-player 
+                    :video="$video"
+                    :video-src="route('videos.raw', $video)"
+                    :video-title="$video->title"
+                    :poster="$video->getThumbnailUrl()"
+                    :autoplay="false"
+                    :muted="false" />
             </div>
 
             <!-- Video Information -->
@@ -55,17 +54,39 @@
                             </svg>
                             <span>Share</span>
                         </button>
+
+                        @auth
+                            @if(auth()->id() === $video->user_id)
+                                <a href="{{ route('videos.edit', $video) }}" 
+                                   class="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>Edit</span>
+                                </a>
+                            @endif
+                        @endauth
                     </div>
                 </div>
 
                 <!-- Channel Information -->
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                            {{ substr($video->user->getChannelName(), 0, 1) }}
-                        </div>
+                        <a href="{{ route('channel.show', $video->user) }}">
+                            @if($video->user->profile_picture)
+                                <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                     alt="{{ $video->user->getChannelName() }}" 
+                                     class="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity">
+                            @else
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-semibold hover:bg-blue-600 transition-colors">
+                                    {{ substr($video->user->getChannelName(), 0, 1) }}
+                                </div>
+                            @endif
+                        </a>
                         <div>
-                            <h3 class="font-semibold text-gray-900">{{ $video->user->getChannelName() }}</h3>
+                            <a href="{{ route('channel.show', $video->user) }}" class="hover:text-blue-600">
+                                <h3 class="font-semibold text-gray-900">{{ $video->user->getChannelName() }}</h3>
+                            </a>
                             <p class="text-sm text-gray-600">{{ number_format($video->user->subscribers_count) }} subscribers</p>
                         </div>
                     </div>
@@ -98,26 +119,54 @@
 
                     <!-- Add Comment Form -->
                     @auth
+                        <!-- Success/Error Messages -->
+                        @if (session()->has('comment_success'))
+                            <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                                {{ session('comment_success') }}
+                            </div>
+                        @endif
+                        
+                        @if (session()->has('reply_success'))
+                            <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                                {{ session('reply_success') }}
+                            </div>
+                        @endif
+
                         <form wire:submit.prevent="addComment" class="mb-6">
                             <div class="flex space-x-3">
-                                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                    {{ substr(auth()->user()->name, 0, 1) }}
-                                </div>
+                                @if(auth()->user()->profile_picture)
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
+                                         alt="{{ auth()->user()->name }}" 
+                                         class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                        {{ substr(auth()->user()->name, 0, 1) }}
+                                    </div>
+                                @endif
                                 <div class="flex-1">
-                                    <textarea wire:model="newComment" 
+                                    <textarea wire:model.defer="newComment" 
                                               placeholder="Add a comment..."
                                               class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none"
-                                              rows="3"></textarea>
+                                              rows="3"
+                                              oninput="toggleCommentButton(this)"></textarea>
+                                    @error('newComment')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
                                     <div class="flex justify-end space-x-2 mt-2">
                                         <button type="button" 
                                                 wire:click="$set('newComment', '')"
-                                                class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                                                class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                                                onclick="document.getElementById('commentSubmitBtn').disabled = true;">
                                             Cancel
                                         </button>
                                         <button type="submit" 
+                                                id="commentSubmitBtn"
                                                 class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                                                {{ empty($newComment) ? 'disabled' : '' }}>
-                                            Comment
+                                                wire:loading.attr="disabled"
+                                                wire:target="addComment"
+                                                disabled>
+                                            <span wire:loading.remove wire:target="addComment">Comment</span>
+                                            <span wire:loading wire:target="addComment">Posting...</span>
                                         </button>
                                     </div>
                                 </div>
@@ -135,9 +184,15 @@
                     <div class="space-y-6">
                         @foreach($comments as $comment)
                             <div class="flex space-x-3">
-                                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                    {{ substr($comment->user->name, 0, 1) }}
-                                </div>
+                                @if($comment->user->profile_picture)
+                                    <img src="{{ asset('storage/' . $comment->user->profile_picture) }}" 
+                                         alt="{{ $comment->user->name }}" 
+                                         class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                        {{ substr($comment->user->name, 0, 1) }}
+                                    </div>
+                                @endif
                                 <div class="flex-1">
                                     <div class="flex items-center space-x-2">
                                         <span class="font-semibold text-sm">{{ $comment->user->name }}</span>
@@ -165,23 +220,39 @@
                                     @if($replyTo === $comment->id)
                                         <form wire:submit.prevent="addReply" class="mt-3">
                                             <div class="flex space-x-3">
-                                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                                                    {{ substr(auth()->user()->name, 0, 1) }}
-                                                </div>
+                                                @if(auth()->user()->profile_picture)
+                                                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
+                                                         alt="{{ auth()->user()->name }}" 
+                                                         class="w-8 h-8 rounded-full object-cover">
+                                                @else
+                                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                                        {{ substr(auth()->user()->name, 0, 1) }}
+                                                    </div>
+                                                @endif
                                                 <div class="flex-1">
-                                                    <textarea wire:model="replyContent" 
+                                                    <textarea wire:model.defer="replyContent" 
                                                               placeholder="Add a reply..."
                                                               class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 resize-none"
-                                                              rows="2"></textarea>
+                                                              rows="2"
+                                                              oninput="toggleReplyButton(this, {{ $comment->id }})"></textarea>
+                                                    @error('replyContent')
+                                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                                    @enderror
                                                     <div class="flex justify-end space-x-2 mt-2">
                                                         <button type="button" 
                                                                 wire:click="cancelReply"
-                                                                class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
+                                                                class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                                                                onclick="document.getElementById('replySubmitBtn{{ $comment->id }}').disabled = true;">
                                                             Cancel
                                                         </button>
                                                         <button type="submit" 
-                                                                class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                                                            Reply
+                                                                id="replySubmitBtn{{ $comment->id }}"
+                                                                class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                                wire:loading.attr="disabled"
+                                                                wire:target="addReply"
+                                                                disabled>
+                                                            <span wire:loading.remove wire:target="addReply">Reply</span>
+                                                            <span wire:loading wire:target="addReply">Posting...</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -194,9 +265,15 @@
                                         <div class="mt-4 ml-6 space-y-3">
                                             @foreach($comment->replies as $reply)
                                                 <div class="flex space-x-3">
-                                                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                                                        {{ substr($reply->user->name, 0, 1) }}
-                                                    </div>
+                                                    @if($reply->user->profile_picture)
+                                                        <img src="{{ asset('storage/' . $reply->user->profile_picture) }}" 
+                                                             alt="{{ $reply->user->name }}" 
+                                                             class="w-8 h-8 rounded-full object-cover">
+                                                    @else
+                                                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                                            {{ substr($reply->user->name, 0, 1) }}
+                                                        </div>
+                                                    @endif
                                                     <div class="flex-1">
                                                         <div class="flex items-center space-x-2">
                                                             <span class="font-semibold text-sm">{{ $reply->user->name }}</span>
@@ -249,11 +326,47 @@
 </div>
 
 <script>
-    function updateWatchTime() {
-        const video = document.getElementById('videoPlayer');
-        if (video && video.currentTime > 0) {
-            // Send watch time update to backend periodically
-            // This can be improved with Livewire wire:poll or custom events
+    function toggleCommentButton(textarea) {
+        const submitBtn = document.getElementById('commentSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = !textarea.value.trim();
         }
     }
+
+    function toggleReplyButton(textarea, commentId) {
+        const submitBtn = document.getElementById('replySubmitBtn' + commentId);
+        if (submitBtn) {
+            submitBtn.disabled = !textarea.value.trim();
+        }
+    }
+
+    // Reset comment form after successful submission
+    document.addEventListener('livewire:dispatched', function (event) {
+        if (event.detail.name === 'comment-posted') {
+            const commentTextarea = document.querySelector('textarea[placeholder="Add a comment..."]');
+            const submitBtn = document.getElementById('commentSubmitBtn');
+            if (commentTextarea && submitBtn) {
+                commentTextarea.value = '';
+                submitBtn.disabled = true;
+            }
+        }
+    });
+
+    // Re-enable button state management after Livewire updates
+    document.addEventListener('livewire:morph-updated', function () {
+        // Re-check comment button state
+        const commentTextarea = document.querySelector('textarea[placeholder="Add a comment..."]');
+        if (commentTextarea) {
+            toggleCommentButton(commentTextarea);
+        }
+        
+        // Re-check reply button states
+        document.querySelectorAll('textarea[placeholder="Add a reply..."]').forEach(function(textarea) {
+            const form = textarea.closest('form');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = !textarea.value.trim();
+            }
+        });
+    });
 </script>

@@ -55,9 +55,15 @@
                                 <!-- Channel Avatar & Title -->
                                 <div class="flex space-x-3">
                                     <div class="flex-shrink-0">
-                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                            {{ substr($video->user ? $video->user->getChannelName() : 'Unknown', 0, 1) }}
-                                        </div>
+                                        @if($video->user && $video->user->profile_picture)
+                                            <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                                 alt="{{ $video->user->getChannelName() }}" 
+                                                 class="w-8 h-8 rounded-full object-cover">
+                                        @else
+                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                                {{ substr($video->user ? $video->user->getChannelName() : 'Unknown', 0, 1) }}
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5">
@@ -105,9 +111,15 @@
                             <!-- Channel Avatar -->
                             <div class="flex-shrink-0">
                                 <a href="{{ route('channel.show', $subscription->channel) }}">
-                                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                                        {{ substr($subscription->channel->getChannelName(), 0, 1) }}
-                                    </div>
+                                    @if($subscription->channel->profile_picture)
+                                        <img src="{{ asset('storage/' . $subscription->channel->profile_picture) }}" 
+                                             alt="{{ $subscription->channel->getChannelName() }}" 
+                                             class="w-16 h-16 rounded-full object-cover hover:opacity-80 transition-opacity">
+                                    @else
+                                        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold hover:opacity-80 transition-opacity">
+                                            {{ substr($subscription->channel->getChannelName(), 0, 1) }}
+                                        </div>
+                                    @endif
                                 </a>
                             </div>
 
