@@ -124,7 +124,7 @@
                         <!-- Current Profile Picture -->
                         <div class="flex-shrink-0">
                             @if($profile_picture)
-                                <img src="{{ Storage::url($profile_picture) }}" 
+                                <img src="{{ asset('sf/' . $profile_picture) }}" 
                                      alt="Profile Picture" 
                                      class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
                             @else
@@ -186,7 +186,7 @@
                         <!-- Current Banner -->
                         @if($channel_banner)
                             <div class="aspect-[6/1] w-full bg-gray-100 rounded-lg overflow-hidden">
-                                <img src="{{ Storage::url($channel_banner) }}" 
+                                <img src="{{ asset('sf/' . $channel_banner) }}" 
                                      alt="Channel Banner" 
                                      class="w-full h-full object-cover">
                             </div>
