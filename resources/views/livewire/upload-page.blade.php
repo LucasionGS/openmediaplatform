@@ -320,17 +320,38 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     
     // Track upload progress
     xhr.upload.addEventListener('progress', function(e) {
+        console.log('Upload progress event:', e.loaded, '/', e.total, '=', (e.loaded/e.total*100).toFixed(1) + '%');
         if (e.lengthComputable) {
             const percentComplete = (e.loaded / e.total) * 100;
             document.getElementById('progressBar').style.width = percentComplete + '%';
-            document.getElementById('progressText').textContent = `Uploading... ${Math.round(percentComplete)}%`;
+            document.getElementById('progressText').textContent = `Uploading... ${Math.round(percentComplete)}% (${formatFileSize(e.loaded)} / ${formatFileSize(e.total)})`;
+            
+            // Calculate upload speed
+            const currentTime = Date.now();
+            if (window.uploadStartTime) {
+                const elapsed = (currentTime - window.uploadStartTime) / 1000; // seconds
+                const speed = e.loaded / elapsed; // bytes per second
+                const speedText = formatFileSize(speed) + '/s';
+                document.getElementById('progressText').textContent += ` - ${speedText}`;
+            }
         }
+    });
+    
+    // Add upload start tracking
+    xhr.upload.addEventListener('loadstart', function(e) {
+        console.log('Upload started:', e);
+        window.uploadStartTime = Date.now();
+        document.getElementById('progressText').textContent = 'Starting upload...';
     });
     
     // Handle completion
     xhr.addEventListener('load', function() {
         console.log('Upload completed with status:', xhr.status);
         console.log('Response text:', xhr.responseText);
+        
+        const uploadEndTime = Date.now();
+        const totalTime = window.uploadStartTime ? (uploadEndTime - window.uploadStartTime) / 1000 : 0;
+        console.log('Total upload time:', totalTime, 'seconds');
         
         if (xhr.status === 200) {
             document.getElementById('progressText').textContent = 'Upload complete! Processing...';
@@ -357,6 +378,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
                 window.location.href = '/';
             }
         } else {
+            console.error('HTTP Error:', xhr.status, xhr.statusText);
             // Handle HTTP errors
             try {
                 const response = JSON.parse(xhr.responseText);
@@ -371,23 +393,32 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     });
     
     // Handle errors
-    xhr.addEventListener('error', function() {
-        document.getElementById('progressText').textContent = 'Upload failed. Please check your connection.';
+    xhr.addEventListener('error', function(e) {
+        console.error('Upload error event:', e);
+        document.getElementById('progressText').textContent = 'Upload failed. Please check your connection and try again.';
         document.getElementById('progressBar').classList.remove('bg-blue-600');
         document.getElementById('progressBar').classList.add('bg-red-500');
         resetUploadButton();
     });
     
     // Handle timeout
-    xhr.addEventListener('timeout', function() {
-        document.getElementById('progressText').textContent = 'Upload timed out. Please try again.';
+    xhr.addEventListener('timeout', function(e) {
+        console.error('Upload timeout event:', e);
+        document.getElementById('progressText').textContent = 'Upload timed out. The file may be too large or your connection is slow.';
         document.getElementById('progressBar').classList.remove('bg-blue-600');
         document.getElementById('progressBar').classList.add('bg-red-500');
         resetUploadButton();
     });
     
-    // Set timeout to 15 minutes
-    xhr.timeout = 900000;
+    // Add abort detection
+    xhr.addEventListener('abort', function(e) {
+        console.error('Upload aborted:', e);
+        document.getElementById('progressText').textContent = 'Upload was cancelled.';
+        resetUploadButton();
+    });
+    
+    // Increase timeout to 30 minutes for large files
+    xhr.timeout = 1800000; // 30 minutes
     
     // Start upload
     xhr.open('POST', this.action);

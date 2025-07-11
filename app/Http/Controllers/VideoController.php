@@ -6,6 +6,7 @@ use App\Models\Video;
 use App\Traits\HandlesUploadLimits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class VideoController extends Controller
 {
@@ -142,6 +143,15 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
+        $startTime = microtime(true);
+        $startMemory = memory_get_usage(true);
+        
+        Log::info('Upload started', [
+            'file_size' => $request->file('video')->getSize(),
+            'memory_usage' => $startMemory,
+            'time' => $startTime
+        ]);
+        
         // Ensure user is authenticated
         if (!auth()->check()) {
             return redirect()->route('login')->with('error', 'You must be signed in to upload videos.');
@@ -252,6 +262,12 @@ class VideoController extends Controller
 
             $video->save();
 
+            // Log after file move
+            Log::info('After file move', [
+                'memory_usage' => memory_get_usage(true),
+                'elapsed' => microtime(true) - $startTime
+            ]);
+
             // Return appropriate response based on request type
             $successMessage = $isDraft ? 'Video saved as draft!' : 'Video uploaded successfully!';
             
@@ -290,6 +306,13 @@ class VideoController extends Controller
             }
             
             return back()->withErrors(['video' => $errorMessage])->withInput();
+        } finally {
+            // Log upload completion
+            Log::info('Upload completed', [
+                'memory_usage' => memory_get_usage(true),
+                'peak_memory' => memory_get_peak_usage(true),
+                'total_time' => microtime(true) - $startTime
+            ]);
         }
     }
 
