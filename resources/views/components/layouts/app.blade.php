@@ -63,7 +63,7 @@
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center justify-center hover:opacity-80 transition-opacity">
                                 @if(auth()->user()->profile_picture)
-                                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
+                                    <img src="{{ asset('sf/' . auth()->user()->profile_picture) }}" 
                                          alt="{{ auth()->user()->name }}" 
                                          class="w-8 h-8 rounded-full object-cover">
                                 @else

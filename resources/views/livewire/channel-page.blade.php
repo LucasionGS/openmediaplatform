@@ -4,7 +4,7 @@
         <!-- Channel Banner -->
         @if($user->channel_banner)
             <div class="w-full h-32 md:h-48 lg:h-64 bg-gray-100 overflow-hidden">
-                <img src="{{ asset('storage/' . $user->channel_banner) }}" 
+                <img src="{{ asset('sf/' . $user->channel_banner) }}" 
                      alt="{{ $user->getChannelName() }} Banner" 
                      class="w-full h-full object-cover">
             </div>
@@ -16,7 +16,7 @@
                 <!-- Channel Avatar -->
                 <div class="flex-shrink-0">
                     @if($user->profile_picture)
-                        <img src="{{ asset('storage/' . $user->profile_picture) }}" 
+                        <img src="{{ asset('sf/' . $user->profile_picture) }}" 
                              alt="{{ $user->getChannelName() }}" 
                              class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg">
                     @else

@@ -56,7 +56,7 @@
                                 <div class="flex space-x-3">
                                     <div class="flex-shrink-0">
                                         @if($video->user && $video->user->profile_picture)
-                                            <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                            <img src="{{ asset('sf/' . $video->user->profile_picture) }}" 
                                                  alt="{{ $video->user->getChannelName() }}" 
                                                  class="w-8 h-8 rounded-full object-cover">
                                         @else
@@ -112,7 +112,7 @@
                             <div class="flex-shrink-0">
                                 <a href="{{ route('channel.show', $subscription->channel) }}">
                                     @if($subscription->channel->profile_picture)
-                                        <img src="{{ asset('storage/' . $subscription->channel->profile_picture) }}" 
+                                        <img src="{{ asset('sf/' . $subscription->channel->profile_picture) }}" 
                                              alt="{{ $subscription->channel->getChannelName() }}" 
                                              class="w-16 h-16 rounded-full object-cover hover:opacity-80 transition-opacity">
                                     @else

@@ -38,7 +38,7 @@
                         <!-- Channel Avatar -->
                         <div class="flex-shrink-0">
                             @if($video->user && $video->user->profile_picture)
-                                <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                <img src="{{ asset('sf/' . $video->user->profile_picture) }}" 
                                      alt="{{ $video->user->name }}" 
                                      class="w-9 h-9 rounded-full object-cover">
                             @else

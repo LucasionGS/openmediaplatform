@@ -91,7 +91,7 @@
                     <div class="flex items-center space-x-3">
                         <a href="{{ route('channel.show', $video->user) }}">
                             @if($video->user->profile_picture)
-                                <img src="{{ asset('storage/' . $video->user->profile_picture) }}" 
+                                <img src="{{ asset('sf/' . $video->user->profile_picture) }}" 
                                      alt="{{ $video->user->getChannelName() }}" 
                                      class="w-12 h-12 rounded-full object-cover hover:opacity-80 transition-opacity">
                             @else
@@ -156,7 +156,7 @@
                         <form wire:submit.prevent="addComment" class="mb-6">
                             <div class="flex space-x-3">
                                 @if(auth()->user()->profile_picture)
-                                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
+                                    <img src="{{ asset('sf/' . auth()->user()->profile_picture) }}" 
                                          alt="{{ auth()->user()->name }}" 
                                          class="w-10 h-10 rounded-full object-cover">
                                 @else
@@ -206,7 +206,7 @@
                         @foreach($comments as $comment)
                             <div class="flex space-x-3">
                                 @if($comment->user->profile_picture)
-                                    <img src="{{ asset('storage/' . $comment->user->profile_picture) }}" 
+                                    <img src="{{ asset('sf/' . $comment->user->profile_picture) }}" 
                                          alt="{{ $comment->user->name }}" 
                                          class="w-10 h-10 rounded-full object-cover">
                                 @else
@@ -242,7 +242,7 @@
                                         <form wire:submit.prevent="addReply" class="mt-3">
                                             <div class="flex space-x-3">
                                                 @if(auth()->user()->profile_picture)
-                                                    <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
+                                                    <img src="{{ asset('sf/' . auth()->user()->profile_picture) }}" 
                                                          alt="{{ auth()->user()->name }}" 
                                                          class="w-8 h-8 rounded-full object-cover">
                                                 @else
@@ -287,7 +287,7 @@
                                             @foreach($comment->replies as $reply)
                                                 <div class="flex space-x-3">
                                                     @if($reply->user->profile_picture)
-                                                        <img src="{{ asset('storage/' . $reply->user->profile_picture) }}" 
+                                                        <img src="{{ asset('sf/' . $reply->user->profile_picture) }}" 
                                                              alt="{{ $reply->user->name }}" 
                                                              class="w-8 h-8 rounded-full object-cover">
                                                     @else

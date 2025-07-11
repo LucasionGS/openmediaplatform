@@ -111,12 +111,12 @@ class User extends Authenticatable
 
     public function getAvatarUrl(): string
     {
-        return $this->profile_picture ? asset('storage/' . $this->profile_picture) : asset('images/default-avatar.png');
+        return $this->profile_picture ? asset('sf/' . $this->profile_picture) : asset('images/default-avatar.png');
     }
 
     public function getBannerUrl(): ?string
     {
-        return $this->channel_banner ? asset('storage/' . $this->channel_banner) : null;
+        return $this->channel_banner ? asset('sf/' . $this->channel_banner) : null;
     }
 
     public function updateSubscribersCount(): void
