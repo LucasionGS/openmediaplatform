@@ -26,7 +26,7 @@
                         @endphp
                         
                         @if($siteIcon)
-                            <img src="{{ asset('sf/' . $siteIcon) }}" alt="{{ $siteTitle }}" class="w-6 h-6 md:w-8 md:h-8 object-cover">
+                            <img src="/favicon" alt="{{ $siteTitle }}" class="w-6 h-6 md:w-8 md:h-8 object-cover">
                         @else
                             <div class="w-6 h-6 md:w-8 md:h-8 bg-red-600 rounded-sm flex items-center justify-center">
                                 <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -47,6 +47,9 @@
                                    placeholder="Search" 
                                    value="{{ request('q') }}"
                                    class="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-l-full focus:outline-none focus:border-blue-500">
+                            @if(request('category'))
+                                <input type="hidden" name="category" value="{{ request('category') }}">
+                            @endif
                             <button type="submit" 
                                     class="px-4 md:px-6 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-full hover:bg-gray-200">
                                 <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,26 +192,30 @@
                     
                     <div class="space-y-1">
                         <h3 class="px-3 text-sm font-semibold text-gray-600 uppercase tracking-wider">Browse</h3>
-                        <a href="?category=music" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12,3V13.55C11.41,13.21 10.73,13 10,13A4,4 0 0,0 6,17A4,4 0 0,0 10,21A4,4 0 0,0 14,17V7H18V3H12Z"/>
-                            </svg>
-                            <span>Music</span>
-                        </a>
                         
-                        <a href="?category=news" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M21,6V8H3V6H21M3,18H12V16H3V18M3,13H21V11H3V13Z"/>
-                            </svg>
-                            <span>News</span>
-                        </a>
+                        @php
+                            $browseCategories = [
+                                'music' => ['Music', 'M12,3V13.55C11.41,13.21 10.73,13 10,13A4,4 0 0,0 6,17A4,4 0 0,0 10,21A4,4 0 0,0 14,17V7H18V3H12Z'],
+                                'gaming' => ['Gaming', 'M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V10.5A1,1 0 0,0 4,11.5H16A1,1 0 0,0 17,10.5M12,2A1,1 0 0,0 11,3V6H13V3A1,1 0 0,0 12,2M21,9H18V7H16V9H15A1,1 0 0,0 14,10V15A1,1 0 0,0 15,16H16V18H18V16H21A1,1 0 0,0 22,15V10A1,1 0 0,0 21,9Z'],
+                                'news' => ['News', 'M21,6V8H3V6H21M3,18H12V16H3V18M3,13H21V11H3V13Z'],
+                                'sports' => ['Sports', 'M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z'],
+                                'education' => ['Education', 'M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z'],
+                                'entertainment' => ['Entertainment', 'M18,4L20,8H17L15,4H13L15,8H12L10,4H8L10,8H7L5,4H4A2,2 0 0,0 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4H18Z'],
+                                'technology' => ['Technology', 'M14.8,16H19V17.5H16.2L14.8,16M15.2,8H16.8L18.2,9.5H15.8L15.2,8M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z'],
+                                'lifestyle' => ['Lifestyle', 'M12,2A2,2 0 0,1 14,4A2,2 0 0,1 12,6A2,2 0 0,1 10,4A2,2 0 0,1 12,2M21,9V7L15,1L13.5,2.5L16.75,5.75L14.5,8H9.5L7.25,5.75L10.5,2.5L9,1L3,7V9H21M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10Z'],
+                                'other' => ['Other', 'M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z']
+                            ];
+                        @endphp
                         
-                        <a href="?category=gaming" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V10.5A1,1 0 0,0 4,11.5H16A1,1 0 0,0 17,10.5M12,2A1,1 0 0,0 11,3V6H13V3A1,1 0 0,0 12,2M21,9H18V7H16V9H15A1,1 0 0,0 14,10V15A1,1 0 0,0 15,16H16V18H18V16H21A1,1 0 0,0 22,15V10A1,1 0 0,0 21,9Z"/>
-                            </svg>
-                            <span>Gaming</span>
-                        </a>
+                        @foreach($browseCategories as $key => $categoryData)
+                            <a href="{{ route('home') }}?{{ http_build_query(['category' => $key]) }}" 
+                               class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request('category') === $key ? 'bg-gray-100' : '' }}">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="{{ $categoryData[1] }}"/>
+                                </svg>
+                                <span>{{ $categoryData[0] }}</span>
+                            </a>
+                        @endforeach
                     </div>
                 </nav>
             </aside>

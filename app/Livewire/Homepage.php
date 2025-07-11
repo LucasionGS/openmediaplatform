@@ -3,21 +3,36 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\Video;
 use App\Models\User;
 
 class Homepage extends Component
 {
+    use WithPagination;
     public $selectedCategory = 'all';
     public $searchQuery = '';
     
     public function mount()
     {
-        // Initialize component
+        // Get search query from URL parameter
+        $this->searchQuery = request('q', '');
+        
+        // Get category from URL parameter
+        $this->selectedCategory = request('category', 'all');
+    }
+
+    public function updatedSearchQuery()
+    {
+        // Reset pagination when search changes
+        $this->resetPage();
+        $this->dispatch('searchUpdated', $this->searchQuery);
     }
 
     public function updatedSelectedCategory()
     {
+        // Reset pagination when category changes
+        $this->resetPage();
         $this->dispatch('categoryChanged', $this->selectedCategory);
     }
 
@@ -35,26 +50,29 @@ class Homepage extends Component
                 $query->byCategory($this->selectedCategory);
             })
             ->when($this->searchQuery, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('title', 'like', '%' . $this->searchQuery . '%')
-                      ->orWhere('description', 'like', '%' . $this->searchQuery . '%');
-                });
+                // Split search query into individual keywords
+                $keywords = array_filter(explode(' ', strtolower(trim($this->searchQuery))));
+                
+                // Each keyword must match somewhere in the video content
+                foreach ($keywords as $keyword) {
+                    $searchTerm = '%' . $keyword . '%';
+                    $query->where(function ($q) use ($searchTerm, $keyword) {
+                        $q->whereRaw('LOWER(title) LIKE ?', [$searchTerm])
+                          ->orWhereRaw('LOWER(description) LIKE ?', [$searchTerm])
+                          ->orWhereJsonContains('tags', $keyword)
+                          ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                              $userQuery->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+                                       ->orWhereRaw('LOWER(channel_name) LIKE ?', [$searchTerm]);
+                          });
+                    });
+                }
             })
-            ->latest('published_at')
+            ->orderByDesc('created_at')
             ->paginate(24);
 
         $categories = [
             'all' => 'All',
-            'music' => 'Music',
-            'gaming' => 'Gaming',
-            'sports' => 'Sports',
-            'news' => 'News',
-            'entertainment' => 'Entertainment',
-            'education' => 'Education',
-            'technology' => 'Technology',
-            'travel' => 'Travel',
-            'food' => 'Food',
-            'lifestyle' => 'Lifestyle',
+            ...Video::getAvailableCategories()
         ];
 
         return view('livewire.homepage', [

@@ -3,14 +3,32 @@
     <div class="mb-6 border-b border-gray-200">
         <div class="flex space-x-1 overflow-x-auto pb-2">
             @foreach($categories as $key => $label)
-                <button wire:click="$set('selectedCategory', '{{ $key }}')" 
-                        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
-                               {{ $selectedCategory === $key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                <a href="{{ $key === 'all' ? route('home') : route('home') . '?' . http_build_query(array_filter(['category' => $key, 'q' => $searchQuery ?: null])) }}" 
+                   class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                          {{ $selectedCategory === $key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                     {{ $label }}
-                </button>
+                </a>
             @endforeach
         </div>
     </div>
+
+    <!-- Search Section -->
+    @if($searchQuery)
+        <div class="mb-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-medium text-blue-900">Search Results</h3>
+                        <p class="text-blue-700">Showing results for: <strong>"{{ $searchQuery }}"</strong></p>
+                    </div>
+                    <a href="{{ $selectedCategory === 'all' ? route('home') : route('home') . '?' . http_build_query(['category' => $selectedCategory]) }}" 
+                       class="text-blue-600 hover:text-blue-800 font-medium">
+                        Clear Search
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Video Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -77,8 +95,17 @@
                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900">No videos found</h3>
-                    <p class="text-gray-500">Be the first to upload a video!</p>
+                    @if($searchQuery)
+                        <h3 class="text-lg font-medium text-gray-900">No videos found</h3>
+                        <p class="text-gray-500">No results found for "{{ $searchQuery }}". Try a different search term.</p>
+                        <button wire:click="$set('searchQuery', '')" 
+                                class="mt-2 text-blue-600 hover:text-blue-800 font-medium">
+                            Clear search and view all videos
+                        </button>
+                    @else
+                        <h3 class="text-lg font-medium text-gray-900">No videos found</h3>
+                        <p class="text-gray-500">Be the first to upload a video!</p>
+                    @endif
                 </div>
             </div>
         @endforelse
