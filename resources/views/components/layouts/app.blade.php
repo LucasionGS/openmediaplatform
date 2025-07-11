@@ -9,38 +9,37 @@
         @livewireStyles
     </head>
     <body class="bg-gray-50">
-        <!-- YouTube-like Header -->
         <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
             <div class="flex items-center justify-between px-4 py-2">
                 <!-- Logo and Menu -->
-                <div class="flex items-center space-x-4">
-                    <button class="p-2 hover:bg-gray-100 rounded-full">
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <button id="sidebarToggle" class="p-2 hover:bg-gray-100 rounded-full xl:hidden">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
-                    <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-red-600 rounded-sm flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('home') }}" class="flex items-center space-x-1 md:space-x-2">
+                        <div class="w-6 h-6 md:w-8 md:h-8 bg-red-600 rounded-sm flex items-center justify-center">
+                            <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                             </svg>
                         </div>
-                        <span class="text-xl font-bold">OpenMedia</span>
+                        <span class="text-lg md:text-xl font-bold hidden sm:block">OpenMedia</span>
                     </a>
                 </div>
 
                 <!-- Search Bar -->
-                <div class="flex-1 max-w-2xl mx-4">
+                <div class="flex-1 max-w-md md:max-w-2xl mx-2 md:mx-4">
                     <form action="{{ route('search') }}" method="GET" class="flex">
                         <div class="flex w-full">
                             <input type="text" 
                                    name="q"
                                    placeholder="Search" 
                                    value="{{ request('q') }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:border-blue-500">
+                                   class="w-full px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-l-full focus:outline-none focus:border-blue-500">
                             <button type="submit" 
-                                    class="px-6 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-full hover:bg-gray-200">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="px-4 md:px-6 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-full hover:bg-gray-200">
+                                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </button>
@@ -49,14 +48,14 @@
                 </div>
 
                 <!-- User Actions -->
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-1 md:space-x-2">
                     @auth
-                        <a href="{{ route('videos.upload') }}" class="p-2 hover:bg-gray-100 rounded-full" title="Create">
+                        <a href="{{ route('videos.upload') }}" class="p-2 hover:bg-gray-100 rounded-full hidden sm:block" title="Create">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                         </a>
-                        <button class="p-2 hover:bg-gray-100 rounded-full" title="Notifications">
+                        <button class="p-2 hover:bg-gray-100 rounded-full hidden sm:block" title="Notifications">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
                             </svg>
@@ -79,6 +78,7 @@
                                         {{ auth()->user()->name }}
                                     </div>
                                     <a href="{{ route('channel.show', auth()->user()) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Channel</a>
+                                    <a href="{{ route('videos.upload') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 sm:hidden">Upload</a>
                                     <a href="{{ route('profile.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
@@ -90,10 +90,10 @@
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 border border-blue-600 text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50">
+                        <a href="{{ route('login') }}" class="inline-flex items-center px-3 md:px-4 py-2 border border-blue-600 text-xs md:text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50">
                             Sign In
                         </a>
-                        <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <a href="{{ route('register') }}" class="items-center px-3 md:px-4 py-2 border border-transparent text-xs md:text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 hidden sm:block">
                             Sign Up
                         </a>
                     @endauth
@@ -102,8 +102,11 @@
         </header>
 
         <div class="flex">
+            <!-- Mobile Sidebar Overlay -->
+            <div id="sidebarOverlay" class="fixed inset-0 bg-black opacity-25 z-40 xl:hidden hidden"></div>
+            
             <!-- Sidebar -->
-            <aside class="w-64 bg-white shadow-sm h-screen sticky top-16 overflow-y-auto">
+            <aside id="sidebar" class="fixed xl:static top-16 left-0 w-64 bg-white shadow-sm h-screen xl:h-auto overflow-y-auto transform -translate-x-full xl:translate-x-0 transition-transform duration-300 z-50">
                 <nav class="p-4">
                     <div class="space-y-1">
                         <a href="{{ route('home') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->routeIs('home') ? 'bg-gray-100' : '' }}">
@@ -121,17 +124,38 @@
                         </a>
 
                         @auth
-                        <a href="{{ route('library') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
+                        <a href="{{ route('library.tab', 'my-videos') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('library/my-videos') ? 'bg-gray-100' : '' }}">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                                <path d="M4,6H2V20A2,2 0 0,0 4,22H18V20H4V6M20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H8V4H20V16Z"/>
                             </svg>
                             <span>Library</span>
+                        </a>
+                        
+                        <a href="{{ route('library.tab', 'playlists') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('library/playlists') ? 'bg-gray-100' : '' }}">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M15,6H3V8H15V6M15,10H3V12H15V10M3,16H11V14H3V16M17,6V14.18C16.69,14.07 16.35,14 16,14A3,3 0 0,0 13,17A3,3 0 0,0 16,20A3,3 0 0,0 19,17V8H22V6H17Z"/>
+                            </svg>
+                            <span>My Playlists</span>
+                        </a>
+
+                        <a href="{{ route('library.tab', 'likes') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('library/likes') ? 'bg-gray-100' : '' }}">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
+                            </svg>
+                            <span>Liked videos</span>
+                        </a>
+                        
+                        <a href="{{ route('library.tab', 'history') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('library/history') ? 'bg-gray-100' : '' }}">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <span>History</span>
                         </a>
                         @endauth
                         
                         <hr class="my-4">
                         
-                        <a href="{{ route('videos.upload') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
+                        <a href="{{ route('videos.upload') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->routeIs('videos.upload') ? 'bg-gray-100' : '' }}">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -163,22 +187,49 @@
                             </svg>
                             <span>Gaming</span>
                         </a>
-                        
-                        <a href="?category=sports" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M6,2L4,6V18A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18V6L18,2H6M7,4H17L18.25,6H5.75L7,4M6,8H18V18H6V8Z"/>
-                            </svg>
-                            <span>Sports</span>
-                        </a>
                     </div>
                 </nav>
             </aside>
 
             <!-- Main Content -->
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-3 md:p-6">
                 {{ $slot }}
             </main>
         </div>
+
+        <script>
+            // Mobile sidebar toggle functionality
+            document.addEventListener('DOMContentLoaded', function() {
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                const sidebar = document.getElementById('sidebar');
+                const sidebarOverlay = document.getElementById('sidebarOverlay');
+                
+                function toggleSidebar() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                }
+                
+                function closeSidebar() {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                }
+                
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener('click', toggleSidebar);
+                }
+                
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener('click', closeSidebar);
+                }
+                
+                // Close sidebar on window resize to desktop size
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth >= 1280) { // xl breakpoint
+                        closeSidebar();
+                    }
+                });
+            });
+        </script>
 
         @livewireScripts
     </body>

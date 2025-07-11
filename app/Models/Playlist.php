@@ -13,6 +13,7 @@ class Playlist extends Model
         'description',
         'user_id',
         'visibility',
+        'thumbnail_path',
     ];
 
     public function user(): BelongsTo

@@ -7,6 +7,7 @@ use App\Models\Video;
 use App\Models\Comment;
 use App\Models\VideoEngagement;
 use App\Models\WatchHistory;
+use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -18,6 +19,7 @@ class VideoWatch extends Component
     public $replyContent = '';
     public $userEngagement = null;
     public $showReplies = [];
+    public $isSubscribed = false;
 
     public function mount(Video $video)
     {
@@ -29,6 +31,17 @@ class VideoWatch extends Component
         // Load user engagement if logged in
         if (Auth::check()) {
             $this->userEngagement = $this->video->userEngagement(Auth::id());
+            $this->checkSubscription();
+        }
+    }
+
+    public function checkSubscription()
+    {
+        if (Auth::check()) {
+            $this->isSubscribed = Subscription::where([
+                'subscriber_id' => Auth::id(),
+                'channel_id' => $this->video->user_id,
+            ])->exists();
         }
     }
 
@@ -118,6 +131,39 @@ class VideoWatch extends Component
         $this->video->updateLikesCount();
         $this->video->updateDislikesCount();
         $this->video->refresh();
+    }
+
+    public function toggleSubscription()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        if (Auth::id() === $this->video->user_id) {
+            session()->flash('error', 'You cannot subscribe to yourself!');
+            return;
+        }
+
+        $subscription = Subscription::where([
+            'subscriber_id' => Auth::id(),
+            'channel_id' => $this->video->user_id,
+        ])->first();
+
+        if ($subscription) {
+            $subscription->delete();
+            $this->isSubscribed = false;
+            session()->flash('success', 'Unsubscribed successfully!');
+        } else {
+            Subscription::create([
+                'subscriber_id' => Auth::id(),
+                'channel_id' => $this->video->user_id,
+            ]);
+            $this->isSubscribed = true;
+            session()->flash('success', 'Subscribed successfully!');
+        }
+
+        // Update the user's subscriber count
+        $this->video->user->refresh();
     }
 
     public function addComment()

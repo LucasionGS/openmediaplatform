@@ -169,12 +169,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 @forelse($playlists as $playlist)
                     <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                        <a href="#" class="block">
+                        <a href="{{ route('playlists.show', $playlist) }}" class="block">
                             <!-- Playlist Thumbnail -->
                             <div class="relative aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
                                 @if($playlist->videos->first())
                                     <img src="{{ $playlist->videos->first()->getThumbnailUrl() }}" 
-                                         alt="{{ $playlist->name }}" 
+                                         alt="{{ $playlist->title }}" 
                                          class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-gray-200">
@@ -186,14 +186,14 @@
                                 
                                 <!-- Video Count Badge -->
                                 <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                                    {{ $playlist->videos->count() }} videos
+                                    {{ $playlist->videos_count }} videos
                                 </div>
                             </div>
 
                             <!-- Playlist Info -->
                             <div class="p-3">
                                 <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5 mb-1">
-                                    {{ $playlist->name }}
+                                    {{ $playlist->title }}
                                 </h3>
                                 @if($playlist->description)
                                     <p class="text-xs text-gray-500 line-clamp-2">{{ $playlist->description }}</p>

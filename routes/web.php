@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoController;
+use App\Http\Controllers\PlaylistController;
 use App\Livewire\ChannelPage;
 use App\Livewire\EditVideoPage;
 use App\Livewire\Homepage;
@@ -46,8 +47,21 @@ Route::get('/channel/{user}', ChannelPage::class)->name('channel.show');
 // Subscription routes (for authenticated users)
 Route::middleware('auth')->group(function () {
     Route::get('/library', LibraryPage::class)->name('library');
+    Route::get('/library/{tab}', LibraryPage::class)->name('library.tab');
     Route::get('/subscriptions', SubscriptionsPage::class)->name('subscriptions');
     Route::post('/subscribe/{user}', [UserController::class, 'subscribe'])->name('subscribe');
     Route::delete('/unsubscribe/{user}', [UserController::class, 'unsubscribe'])->name('unsubscribe');
     Route::get('/profile/settings', ProfileSettings::class)->name('profile.settings');
+    
+    // Playlist management routes
+    Route::get('/playlists/user', [PlaylistController::class, 'getUserPlaylists'])->name('playlists.user');
+    Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
+    Route::put('/playlists/{playlist}', [PlaylistController::class, 'update'])->name('playlists.update');
+    Route::delete('/playlists/{playlist}', [PlaylistController::class, 'destroy'])->name('playlists.destroy');
+    Route::post('/playlists/{playlist}/videos', [PlaylistController::class, 'addVideo'])->name('playlists.add-video');
+    Route::delete('/playlists/{playlist}/videos', [PlaylistController::class, 'removeVideo'])->name('playlists.remove-video');
+    Route::put('/playlists/{playlist}/reorder', [PlaylistController::class, 'reorderVideos'])->name('playlists.reorder');
 });
+
+// Public playlist routes (viewable by anyone if public/unlisted)
+Route::get('/playlist/{playlist}', App\Livewire\PlaylistViewPage::class)->name('playlists.show');

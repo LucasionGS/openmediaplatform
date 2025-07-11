@@ -177,13 +177,27 @@
                             Delete Video
                         </button>
 
-                        <button type="submit" 
-                                class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                                wire:loading.attr="disabled"
-                                wire:target="updateVideo">
-                            <span wire:loading.remove wire:target="updateVideo">Save Changes</span>
-                            <span wire:loading wire:target="updateVideo">Saving...</span>
-                        </button>
+                        <div class="flex space-x-3">
+                            @if($video->visibility === 'unpublished')
+                                <!-- Show publish button for drafts -->
+                                <button type="button" 
+                                        wire:click="publishVideo"
+                                        class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                                        wire:loading.attr="disabled"
+                                        wire:target="publishVideo">
+                                    <span wire:loading.remove wire:target="publishVideo">Publish Video</span>
+                                    <span wire:loading wire:target="publishVideo">Publishing...</span>
+                                </button>
+                            @endif
+                            
+                            <button type="submit" 
+                                    class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                                    wire:loading.attr="disabled"
+                                    wire:target="updateVideo">
+                                <span wire:loading.remove wire:target="updateVideo">Save Changes</span>
+                                <span wire:loading wire:target="updateVideo">Saving...</span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

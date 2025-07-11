@@ -175,8 +175,15 @@
             <!-- Submit Buttons -->
             <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-gray-200">
                 <button type="button" 
-                        class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
-                    Save as Draft
+                        id="draftBtn"
+                        onclick="saveAsDraft()"
+                        disabled
+                        class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                    <span id="draftText">Save as Draft</span>
+                    <svg id="draftSpinner" class="hidden animate-spin -mr-1 ml-3 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
                 <button type="submit" 
                         id="uploadBtn"
@@ -228,8 +235,9 @@ function handleFileSelect(input) {
     document.getElementById('fileInfo').classList.remove('hidden');
     document.getElementById('dropZone').classList.add('hidden');
     
-    // Enable upload button
+    // Enable both upload and draft buttons
     uploadBtn.disabled = false;
+    document.getElementById('draftBtn').disabled = false;
 }
 
 function clearFile() {
@@ -237,6 +245,7 @@ function clearFile() {
     document.getElementById('fileInfo').classList.add('hidden');
     document.getElementById('dropZone').classList.remove('hidden');
     document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('draftBtn').disabled = true;
     document.getElementById('progressContainer').classList.add('hidden');
 }
 
@@ -382,7 +391,14 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     
     // Start upload
     xhr.open('POST', this.action);
-    xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    
+    // Get CSRF token from the form's hidden input (added by @csrf directive)
+    const csrfInput = document.querySelector('input[name="_token"]');
+    const csrfToken = csrfInput ? csrfInput.value : '{{ csrf_token() }}';
+    
+    xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.setRequestHeader('Accept', 'application/json');
     xhr.send(formData);
 });
 
@@ -390,5 +406,115 @@ function resetUploadButton() {
     document.getElementById('uploadBtn').disabled = false;
     document.getElementById('uploadText').textContent = 'Upload Video';
     document.getElementById('uploadSpinner').classList.add('hidden');
+    document.getElementById('draftBtn').disabled = false;
+    document.getElementById('draftText').textContent = 'Save as Draft';
+    document.getElementById('draftSpinner').classList.add('hidden');
+}
+
+function saveAsDraft() {
+    // Get the form
+    const form = document.getElementById('uploadForm');
+    
+    // Validate required fields
+    const title = document.getElementById('title').value.trim();
+    if (!title) {
+        alert('Please enter a video title before saving as draft.');
+        document.getElementById('title').focus();
+        return;
+    }
+    
+    const videoFile = document.getElementById('video').files[0];
+    if (!videoFile) {
+        alert('Please select a video file before saving as draft.');
+        return;
+    }
+    
+    // Disable buttons and show loading state
+    document.getElementById('draftBtn').disabled = true;
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('draftText').textContent = 'Saving...';
+    document.getElementById('draftSpinner').classList.remove('hidden');
+    
+    // Show progress container
+    document.getElementById('progressContainer').classList.remove('hidden');
+    document.getElementById('progressText').textContent = 'Saving draft...';
+    
+    // Create FormData and add draft flag
+    const formData = new FormData(form);
+    formData.append('save_as_draft', '1');
+    
+    // Create XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+    
+    // Handle progress
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progressBar').style.width = percentComplete + '%';
+            document.getElementById('progressText').textContent = `Saving draft... ${percentComplete}%`;
+        }
+    });
+    
+    // Handle completion
+    xhr.addEventListener('load', function() {
+        console.log('Draft upload response status:', xhr.status);
+        console.log('Draft upload response text:', xhr.responseText);
+        
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                console.log('Parsed draft response:', response);
+                if (response.success) {
+                    document.getElementById('progressText').textContent = response.message;
+                    document.getElementById('progressBar').style.width = '100%';
+                    
+                    // Redirect after a short delay
+                    setTimeout(function() {
+                        window.location.href = response.redirect;
+                    }, 1000);
+                } else {
+                    console.error('Draft save failed:', response.message);
+                    throw new Error(response.message || 'Draft save failed');
+                }
+            } catch (e) {
+                console.error('Error parsing draft response:', e);
+                console.error('Raw response text:', xhr.responseText);
+                document.getElementById('progressText').textContent = 'Draft save failed. Please try again.';
+                document.getElementById('progressBar').classList.remove('bg-blue-600');
+                document.getElementById('progressBar').classList.add('bg-red-500');
+                resetUploadButton();
+            }
+        } else {
+            console.error('Draft upload HTTP error:', xhr.status, xhr.statusText);
+            console.error('Draft upload response:', xhr.responseText);
+            document.getElementById('progressText').textContent = 'Draft save failed. Please try again.';
+            document.getElementById('progressBar').classList.remove('bg-blue-600');
+            document.getElementById('progressBar').classList.add('bg-red-500');
+            resetUploadButton();
+        }
+    });
+    
+    // Handle errors
+    xhr.addEventListener('error', function() {
+        document.getElementById('progressText').textContent = 'Draft save failed. Please check your connection.';
+        document.getElementById('progressBar').classList.remove('bg-blue-600');
+        document.getElementById('progressBar').classList.add('bg-red-500');
+        resetUploadButton();
+    });
+    
+    // Set timeout
+    xhr.timeout = 900000; // 15 minutes
+    
+    // Start upload
+    xhr.open('POST', form.action);
+    
+    // Get CSRF token from the form's hidden input (added by @csrf directive)
+    const csrfInput = document.querySelector('input[name="_token"]');
+    const csrfToken = csrfInput ? csrfInput.value : '{{ csrf_token() }}';
+    
+    xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.send(formData);
 }
 </script>

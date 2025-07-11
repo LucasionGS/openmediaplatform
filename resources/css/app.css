@@ -35,7 +35,6 @@ label:has(+input:required):after {
     color: red;
 }
 
-/* YouTube-like utilities */
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

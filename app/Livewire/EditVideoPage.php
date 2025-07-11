@@ -80,6 +80,49 @@ class EditVideoPage extends Component
         }
     }
 
+    public function publishVideo()
+    {
+        try {
+            // Validate required fields for publishing
+            $this->validate([
+                'title' => 'required|string|max:255',
+                'visibility' => 'required|in:' . implode(',', [
+                    Video::VISIBILITY_PUBLIC,
+                    Video::VISIBILITY_PRIVATE,
+                    Video::VISIBILITY_UNLISTED,
+                ]),
+            ]);
+
+            // Process tags
+            $tags = [];
+            if (!empty($this->tags)) {
+                $tags = array_map('trim', explode(',', $this->tags));
+                $tags = array_filter($tags); // Remove empty tags
+            }
+
+            // Update video with current form data and publish it
+            $this->video->update([
+                'title' => $this->title,
+                'description' => $this->description,
+                'category' => $this->category,
+                'tags' => $tags,
+                'visibility' => $this->visibility,
+                'published_at' => now(),
+            ]);
+
+            $this->success = 'Video published successfully!';
+            $this->error = '';
+
+            // Redirect to the video page after publishing
+            return redirect()->route('videos.show', $this->video)
+                ->with('message', 'Video published successfully!');
+
+        } catch (\Exception $e) {
+            $this->error = 'Error publishing video: ' . $e->getMessage();
+            $this->success = '';
+        }
+    }
+
     public function uploadThumbnail()
     {
         $this->validate([

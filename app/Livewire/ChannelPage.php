@@ -90,7 +90,9 @@ class ChannelPage extends Component
     public function getPlaylistsProperty()
     {
         return $this->user->playlists()
-            ->where('is_public', true)
+            ->where('visibility', 'public')
+            ->withCount('videos')
+            ->with('videos')
             ->latest()
             ->paginate(12);
     }

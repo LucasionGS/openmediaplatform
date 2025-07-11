@@ -1,6 +1,4 @@
-<x-layouts.youtube-app>
-    <x-slot name="title">Upload Video - OpenMediaPlatform</x-slot>
-    
+<x-layouts.app>
     <div class="max-w-4xl mx-auto p-6">
         <h1 class="text-2xl font-bold mb-6">Upload Video</h1>
         
@@ -20,11 +18,11 @@
                         <p class="text-lg font-semibold text-gray-700 mb-2">Drag and drop video files to upload</p>
                         <p class="text-sm text-gray-500 mb-4">Your videos will be private until you publish them.</p>
                         <input type="file" 
-                               name="video"
-                               accept="video/*"
-                               required
-                               class="hidden" 
-                               id="video-upload">
+                                name="video"
+                                accept="video/*"
+                                required
+                                class="hidden" 
+                                id="video-upload">
                         <label for="video-upload" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
@@ -45,13 +43,13 @@
                                 Title (required)
                             </label>
                             <input type="text" 
-                                   id="title"
-                                   name="title"
-                                   value="{{ old('title') }}"
-                                   required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                   placeholder="Add a title that describes your video"
-                                   maxlength="100">
+                                    id="title"
+                                    name="title"
+                                    value="{{ old('title') }}"
+                                    required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Add a title that describes your video"
+                                    maxlength="100">
                             @error('title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -110,9 +108,9 @@
                                 </div>
                             </div>
                             <input type="file" 
-                                   name="thumbnail"
-                                   accept="image/*"
-                                   class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    name="thumbnail"
+                                    accept="image/*"
+                                    class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                             @error('thumbnail') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -163,4 +161,4 @@
             </form>
         </div>
     </div>
-</x-layouts.youtube-app>
+</x-layouts.app>

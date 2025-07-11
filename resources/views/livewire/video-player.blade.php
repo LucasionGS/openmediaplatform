@@ -5,14 +5,21 @@
          volumeHover: false,
          settingsOpen: false,
          isBuffering: false,
-         isDragging: false
+         isDragging: false,
+         mouseInPlayer: false,
+         isPlaying: false
      }"
-     @mousemove="showControls = true; clearTimeout(hideTimeout); hideTimeout = setTimeout(() => showControls = false, 3000)"
-     @mouseleave="if (!volumeHover && !settingsOpen && !isDragging) { showControls = false; clearTimeout(hideTimeout); }">
+     :class="{ 'cursor-none': !showControls && mouseInPlayer }"
+     @mouseenter="mouseInPlayer = true; showControls = true; clearTimeout(hideTimeout);"
+     @mouseleave="mouseInPlayer = false; showControls = true; clearTimeout(hideTimeout);"
+     @mousemove="showControls = true; clearTimeout(hideTimeout); hideTimeout = setTimeout(() => showControls = false, 3000);">
+    
+    <!-- Debug Info -->
+    {{-- <div class="absolute top-2 left-2 text-white text-xs z-50" x-text="'Controls: ' + showControls + ', Playing: ' + isPlaying + ', Mouse: ' + mouseInPlayer"></div> --}}
     
     <!-- Video Element -->
     <video id="{{ $playerId }}"
-           class="w-full h-full object-contain cursor-pointer"
+           class="w-full h-full object-contain"
            preload="metadata"
            @if($poster) poster="{{ $poster }}" @endif
            @if($autoplay) autoplay @endif
@@ -31,15 +38,16 @@
 
     <!-- Video Controls -->
     <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black to-transparent p-4 transition-opacity duration-300 z-30"
-         :class="{ 'opacity-0': !showControls && {{ $isPlaying ? 'true' : 'false' }}, 'opacity-100': showControls || !{{ $isPlaying ? 'true' : 'false' }} }"
+         :class="{ 'opacity-0': !showControls, 'opacity-100': showControls }"
          @mouseenter="showControls = true; clearTimeout(hideTimeout)"
-         @mouseleave="if (!volumeHover && !settingsOpen && !isDragging) { hideTimeout = setTimeout(() => showControls = false, 3000); }">
+         @mouseleave="hideTimeout = setTimeout(() => showControls = false, 1000);">
         
         <!-- Progress Bar -->
         <div class="mb-4">
             <!-- Buffered Progress -->
-            <div class="relative w-full h-1 bg-gray-600 rounded-full overflow-hidden cursor-pointer"
+            <div id="progressContainer-{{ $playerId }}" class="relative w-full h-2 hover:h-4 bg-gray-600 rounded-full overflow-hidden cursor-pointer transition-all duration-200 group/progress"
                  onclick="window.videoPlayers['{{ $playerId }}'].seekToPosition(event)"
+                 onmousedown="window.videoPlayers['{{ $playerId }}'].startDrag(event)"
                  onmousemove="window.videoPlayers['{{ $playerId }}'].updateProgressHover(event)">
                 <!-- Buffered Bar -->
                 <div id="bufferedBar-{{ $playerId }}" class="absolute left-0 top-0 h-full bg-gray-400 rounded-full transition-all"
@@ -47,8 +55,11 @@
                 <!-- Progress Bar -->
                 <div id="progressBar-{{ $playerId }}" class="absolute left-0 top-0 h-full bg-red-600 rounded-full transition-all"
                      style="width: {{ $duration > 0 ? ($currentTime / $duration * 100) : 0 }}%"></div>
+                <!-- Progress Handle (visible on hover) -->
+                <div id="progressHandle-{{ $playerId }}" class="absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full opacity-0 group-hover/progress:opacity-100 transition-all duration-200 pointer-events-none"
+                     style="left: {{ $duration > 0 ? ($currentTime / $duration * 100) : 0 }}%"></div>
                 <!-- Hover Preview -->
-                <div class="absolute top-0 h-full w-1 bg-white opacity-0 hover:opacity-100 transition-opacity"
+                <div class="absolute top-0 h-full w-1 bg-white opacity-0 group-hover/progress:opacity-100 transition-opacity"
                      style="left: var(--hover-position, 0%)"></div>
             </div>
         </div>
@@ -202,6 +213,16 @@
             console.log('Livewire component not available for video player {{ $playerId }}');
         }
         
+        // Load saved volume settings from localStorage
+        const savedVolume = localStorage.getItem('videoPlayer_volume');
+        const savedMuted = localStorage.getItem('videoPlayer_muted') === 'true';
+        
+        // Apply saved settings to video element
+        if (savedVolume !== null) {
+            video.volume = parseFloat(savedVolume);
+        }
+        video.muted = savedMuted;
+        
         // Create video player controller
         window.videoPlayers['{{ $playerId }}'] = {
             video: video,
@@ -248,10 +269,17 @@
             
             updateProgress: function(currentTime, duration) {
                 const progressBar = document.querySelector(`#progressBar-${this.playerId}`);
+                const progressHandle = document.querySelector(`#progressHandle-${this.playerId}`);
                 const timeDisplay = document.querySelector(`#timeDisplay-${this.playerId}`);
                 
                 if (progressBar && duration > 0) {
-                    progressBar.style.width = (currentTime / duration * 100) + '%';
+                    const percentage = (currentTime / duration * 100);
+                    progressBar.style.width = percentage + '%';
+                    
+                    // Update progress handle position
+                    if (progressHandle) {
+                        progressHandle.style.left = percentage + '%';
+                    }
                 }
                 
                 if (timeDisplay) {
@@ -284,6 +312,10 @@
             toggleMute: function() {
                 this.video.muted = !this.video.muted;
                 this.updateVolumeButton(this.video.volume, this.video.muted);
+                
+                // Save mute state to localStorage
+                localStorage.setItem('videoPlayer_muted', this.video.muted);
+                
                 if (this.component && typeof this.component.call === 'function') {
                     this.component.call('updateVolume', this.video.volume, this.video.muted);
                 }
@@ -293,6 +325,11 @@
                 this.video.volume = parseFloat(volume);
                 this.video.muted = (volume == 0);
                 this.updateVolumeButton(this.video.volume, this.video.muted);
+                
+                // Save volume and mute state to localStorage
+                localStorage.setItem('videoPlayer_volume', this.video.volume);
+                localStorage.setItem('videoPlayer_muted', this.video.muted);
+                
                 if (this.component && typeof this.component.call === 'function') {
                     this.component.call('updateVolume', this.video.volume, this.video.muted);
                 }
@@ -326,6 +363,57 @@
                 const percentage = clickX / width;
                 const seekTime = percentage * this.video.duration;
                 this.video.currentTime = seekTime;
+            },
+            
+            startDrag: function(event) {
+                event.preventDefault();
+                const progressContainer = document.getElementById(`progressContainer-${this.playerId}`);
+                const player = this;
+                let isDragging = true;
+                
+                // Set dragging state in Alpine.js
+                const videoContainer = document.getElementById(this.playerId).closest('[x-data]');
+                if (videoContainer && videoContainer.__x) {
+                    videoContainer.__x.$data.isDragging = true;
+                }
+                
+                // Seek to initial position
+                this.seekToPosition(event);
+                
+                function handleMouseMove(e) {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    
+                    const rect = progressContainer.getBoundingClientRect();
+                    const moveX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+                    const percentage = moveX / rect.width;
+                    const seekTime = percentage * player.video.duration;
+                    
+                    if (!isNaN(seekTime) && seekTime >= 0 && seekTime <= player.video.duration) {
+                        player.video.currentTime = seekTime;
+                    }
+                    
+                    // Update hover position for visual feedback
+                    const hoverPercentage = (moveX / rect.width) * 100;
+                    progressContainer.style.setProperty('--hover-position', hoverPercentage + '%');
+                }
+                
+                function handleMouseUp() {
+                    isDragging = false;
+                    
+                    // Clear dragging state in Alpine.js
+                    if (videoContainer && videoContainer.__x) {
+                        videoContainer.__x.$data.isDragging = false;
+                    }
+                    
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                    document.removeEventListener('mouseleave', handleMouseUp);
+                }
+                
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+                document.addEventListener('mouseleave', handleMouseUp);
             },
             
             updateProgressHover: function(event) {
@@ -380,6 +468,19 @@
             player.updateSpeed(video.playbackRate);
             player.updatePlayButton(!video.paused);
             player.updateProgress(video.currentTime, video.duration);
+            
+            // Attempt to autoplay the video
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Autoplay succeeded
+                    console.log('Video autoplay started successfully');
+                }).catch((error) => {
+                    // Autoplay was prevented (common in modern browsers)
+                    console.log('Video autoplay was prevented:', error.message);
+                    // The video will remain paused and show the play button
+                });
+            }
         });
         
         video.addEventListener('timeupdate', () => {
@@ -393,6 +494,13 @@
         video.addEventListener('play', () => {
             const player = window.videoPlayers['{{ $playerId }}'];
             player.updatePlayButton(true);
+            
+            // Update Alpine.js state
+            const videoContainer = document.getElementById('{{ $playerId }}').closest('[x-data]');
+            if (videoContainer && videoContainer.__x) {
+                videoContainer.__x.$data.isPlaying = true;
+            }
+            
             if (component && typeof component.call === 'function') {
                 component.call('setPlaying');
             }
@@ -401,6 +509,13 @@
         video.addEventListener('pause', () => {
             const player = window.videoPlayers['{{ $playerId }}'];
             player.updatePlayButton(false);
+            
+            // Update Alpine.js state
+            const videoContainer = document.getElementById('{{ $playerId }}').closest('[x-data]');
+            if (videoContainer && videoContainer.__x) {
+                videoContainer.__x.$data.isPlaying = false;
+            }
+            
             if (component && typeof component.call === 'function') {
                 component.call('setPaused');
             }
@@ -409,6 +524,13 @@
         video.addEventListener('ended', () => {
             const player = window.videoPlayers['{{ $playerId }}'];
             player.updatePlayButton(false);
+            
+            // Update Alpine.js state
+            const videoContainer = document.getElementById('{{ $playerId }}').closest('[x-data]');
+            if (videoContainer && videoContainer.__x) {
+                videoContainer.__x.$data.isPlaying = false;
+            }
+            
             if (component && typeof component.call === 'function') {
                 component.call('setEnded');
             }
@@ -428,6 +550,11 @@
         video.addEventListener('volumechange', () => {
             const player = window.videoPlayers['{{ $playerId }}'];
             player.updateVolumeButton(video.volume, video.muted);
+            
+            // Save volume settings to localStorage
+            localStorage.setItem('videoPlayer_volume', video.volume);
+            localStorage.setItem('videoPlayer_muted', video.muted);
+            
             if (component && typeof component.call === 'function') {
                 component.call('updateVolume', video.volume, video.muted);
             }

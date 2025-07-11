@@ -48,7 +48,10 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->enum('visibility', ['public', 'private', 'unlisted'])->default('public');
+            $table->string('thumbnail_path')->nullable();
             $table->timestamps();
+            
+            $table->index(['user_id', 'visibility']);
         });
 
         // Create playlist_videos table
@@ -61,6 +64,7 @@ return new class extends Migration
             
             $table->foreign('video_id')->references('vid')->on('videos')->onDelete('cascade');
             $table->unique(['playlist_id', 'video_id']);
+            $table->index(['playlist_id', 'position']);
         });
 
         // Create watch_history table

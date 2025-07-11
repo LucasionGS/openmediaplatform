@@ -178,15 +178,25 @@ class VideoController extends Controller
             $maxUploadSizeKB = $this->getMaxUploadSizeInKB();
             $maxUploadSizeMB = $this->formatBytes($maxUploadSizeKB * 1024);
 
-            // Validate the request
-            $request->validate([
+            // Determine if this is a draft
+            $isDraft = $request->boolean('save_as_draft');
+
+            // Validate the request with conditional visibility requirement
+            $rules = [
                 'video' => 'required|file|mimes:mp4,mov,avi,wmv,mkv,flv,webm|max:' . $maxUploadSizeKB,
                 'title' => 'required|string|max:100',
                 'description' => 'nullable|string|max:1000',
                 'category' => 'nullable|string|max:50',
                 'tags' => 'nullable|string|max:500',
-                'visibility' => 'required|in:public,private,unlisted',
-            ], [
+                'save_as_draft' => 'nullable|boolean',
+            ];
+
+            // Only require visibility if not saving as draft
+            if (!$isDraft) {
+                $rules['visibility'] = 'required|in:public,private,unlisted';
+            }
+
+            $request->validate($rules, [
                 'video.max' => "The video file must not be larger than {$maxUploadSizeMB}.",
                 'video.mimes' => 'The video must be a file of type: mp4, mov, avi, wmv, mkv, flv, webm.',
             ]);
@@ -196,10 +206,21 @@ class VideoController extends Controller
             $video->title = $request->title;
             $video->description = $request->description;
             $video->category = $request->category;
-            $video->visibility = $request->visibility === 'public' ? Video::VISIBILITY_PUBLIC : 
-                                ($request->visibility === 'private' ? Video::VISIBILITY_PRIVATE : Video::VISIBILITY_UNLISTED);
+            
+            // Determine visibility and publication status
+            
+            if ($isDraft) {
+                // Save as draft - set visibility to unpublished regardless of form selection
+                $video->visibility = Video::VISIBILITY_UNPUBLISHED;
+                $video->published_at = null;
+            } else {
+                // Normal upload - use the selected visibility
+                $video->visibility = $request->visibility === 'public' ? Video::VISIBILITY_PUBLIC : 
+                                    ($request->visibility === 'private' ? Video::VISIBILITY_PRIVATE : Video::VISIBILITY_UNLISTED);
+                $video->published_at = $request->visibility === 'public' ? now() : null;
+            }
+            
             $video->user_id = auth()->id();
-            $video->published_at = $request->visibility === 'public' ? now() : null;
             
             // Process tags
             if ($request->tags) {
@@ -232,16 +253,18 @@ class VideoController extends Controller
             $video->save();
 
             // Return appropriate response based on request type
+            $successMessage = $isDraft ? 'Video saved as draft!' : 'Video uploaded successfully!';
+            
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Video uploaded successfully!',
-                    'redirect' => route('videos.show', ['video' => $video->vid])
+                    'message' => $successMessage,
+                    'redirect' => $isDraft ? route('library.tab', 'videos') : route('videos.show', ['video' => $video->vid])
                 ]);
             }
 
-            return redirect()->route('videos.show', ['video' => $video->vid])
-                ->with('message', 'Video uploaded successfully!');
+            $redirectRoute = $isDraft ? route('library.tab', 'videos') : route('videos.show', ['video' => $video->vid]);
+            return redirect($redirectRoute)->with('message', $successMessage);
 
         } catch (\Exception $e) {
             \Log::error('Video upload failed: ' . $e->getMessage());

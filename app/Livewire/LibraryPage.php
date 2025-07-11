@@ -15,21 +15,45 @@ class LibraryPage extends Component
 {
     use WithPagination;
 
-    public string $activeTab = 'watch-history';
+    public string $activeTab = 'my-videos';
     public int $perPage = 12;
+    
+    // Playlist management properties
+    public $showCreatePlaylistModal = false;
+    public $showEditPlaylistModal = false;
+    public $editingPlaylistId = null;
+    public $playlistTitle = '';
+    public $playlistDescription = '';
+    public $playlistVisibility = 'private';
+    
+    protected $rules = [
+        'playlistTitle' => 'required|string|max:255',
+        'playlistDescription' => 'nullable|string|max:5000',
+        'playlistVisibility' => 'required|in:public,private,unlisted',
+    ];
 
-    public function mount()
+    // Valid tab names mapping
+    private array $validTabs = [
+        'my-videos' => 'my-videos',
+        'videos' => 'my-videos',
+        'history' => 'watch-history',
+        'watch-history' => 'watch-history',
+        'likes' => 'liked-videos', 
+        'liked-videos' => 'liked-videos',
+        'playlists' => 'playlists',
+    ];
+
+    public function mount($tab = null)
     {
         // Require authentication to access library
         if (!auth()->check()) {
             return redirect()->route('login')->with('message', 'You must be signed in to access your library.');
         }
-    }
-
-    public function setActiveTab(string $tab)
-    {
-        $this->activeTab = $tab;
-        $this->resetPage();
+        
+        // Set active tab based on URL parameter
+        if ($tab && isset($this->validTabs[$tab])) {
+            $this->activeTab = $this->validTabs[$tab];
+        }
     }
 
     public function getWatchHistoryProperty()
@@ -113,6 +137,89 @@ class LibraryPage extends Component
             
             session()->flash('success', 'Video removed from liked videos.');
         }
+    }
+
+    // Playlist management methods
+    public function createPlaylist()
+    {
+        $this->validate([
+            'playlistTitle' => 'required|string|max:255',
+            'playlistDescription' => 'nullable|string|max:5000',
+            'playlistVisibility' => 'required|in:public,private,unlisted',
+        ]);
+
+        Playlist::create([
+            'title' => $this->playlistTitle,
+            'description' => $this->playlistDescription,
+            'visibility' => $this->playlistVisibility,
+            'user_id' => auth()->id(),
+        ]);
+
+        $this->resetPlaylistForm();
+        $this->showCreatePlaylistModal = false;
+        session()->flash('success', 'Playlist created successfully!');
+    }
+
+    public function editPlaylist($playlistId)
+    {
+        $playlist = Playlist::where('id', $playlistId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $this->editingPlaylistId = $playlist->id;
+        $this->playlistTitle = $playlist->title;
+        $this->playlistDescription = $playlist->description;
+        $this->playlistVisibility = $playlist->visibility;
+        $this->showEditPlaylistModal = true;
+    }
+
+    public function updatePlaylist()
+    {
+        $this->validate([
+            'playlistTitle' => 'required|string|max:255',
+            'playlistDescription' => 'nullable|string|max:5000',
+            'playlistVisibility' => 'required|in:public,private,unlisted',
+        ]);
+
+        $playlist = Playlist::where('id', $this->editingPlaylistId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $playlist->update([
+            'title' => $this->playlistTitle,
+            'description' => $this->playlistDescription,
+            'visibility' => $this->playlistVisibility,
+        ]);
+
+        $this->resetPlaylistForm();
+        $this->showEditPlaylistModal = false;
+        session()->flash('success', 'Playlist updated successfully!');
+    }
+
+    public function deletePlaylist($playlistId)
+    {
+        $playlist = Playlist::where('id', $playlistId)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $playlist->delete();
+        session()->flash('success', 'Playlist deleted successfully!');
+    }
+
+    public function resetPlaylistForm()
+    {
+        $this->playlistTitle = '';
+        $this->playlistDescription = '';
+        $this->playlistVisibility = 'private';
+        $this->editingPlaylistId = null;
+        $this->resetValidation();
+    }
+
+    public function closePlaylistModals()
+    {
+        $this->showCreatePlaylistModal = false;
+        $this->showEditPlaylistModal = false;
+        $this->resetPlaylistForm();
     }
 
     public function render()

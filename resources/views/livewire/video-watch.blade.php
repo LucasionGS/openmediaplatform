@@ -1,4 +1,17 @@
 <div class="max-w-7xl mx-auto">
+    <!-- Flash Messages -->
+    @if (session()->has('success'))
+        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            {{ session('success') }}
+        </div>
+    @endif
+    
+    @if (session()->has('error'))
+        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Video Section -->
         <div class="lg:col-span-2">
@@ -56,6 +69,10 @@
                         </button>
 
                         @auth
+                            <x-add-to-playlist :video-id="$video->vid" />
+                        @endauth
+
+                        @auth
                             @if(auth()->id() === $video->user_id)
                                 <a href="{{ route('videos.edit', $video) }}" 
                                    class="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors">
@@ -93,8 +110,12 @@
                     
                     @auth
                         @if($video->user_id !== auth()->id())
-                            <button class="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors">
-                                Subscribe
+                            <button wire:click="toggleSubscription" 
+                                    class="px-6 py-2 rounded-full transition-colors font-medium
+                                           {{ $isSubscribed 
+                                              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                                              : 'bg-red-600 text-white hover:bg-red-700' }}">
+                                {{ $isSubscribed ? 'Subscribed' : 'Subscribe' }}
                             </button>
                         @endif
                     @else

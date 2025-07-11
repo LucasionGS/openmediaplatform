@@ -1,4 +1,4 @@
-<x-layouts.youtube-app>
+<x-layouts.app>
     <x-slot name="title">{{ $video->title }} - OpenMediaPlatform</x-slot>
     
     <div class="flex gap-6 p-6">
@@ -240,4 +240,4 @@
             </div>
         </div>
     </div>
-</x-layouts.youtube-app>
+</x-layouts.app>
