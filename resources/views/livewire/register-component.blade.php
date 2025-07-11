@@ -87,6 +87,28 @@
                     </div>
                 </div>
 
+                <!-- Registration Code Field (only show if required) -->
+                @if($this->isRegistrationCodeRequired())
+                    <div>
+                        <label for="registration_code" class="block text-sm font-medium text-gray-700">
+                            Registration Code
+                        </label>
+                        <div class="mt-1">
+                            <input 
+                                type="text" 
+                                id="registration_code" 
+                                wire:model="registration_code" 
+                                required 
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                                placeholder="Enter registration code"
+                            >
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">
+                            This instance requires a registration code to create new accounts.
+                        </p>
+                    </div>
+                @endif
+
                 <!-- Error Message -->
                 @if($error)
                     <div class="rounded-md bg-red-50 p-4">

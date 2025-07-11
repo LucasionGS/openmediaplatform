@@ -15,6 +15,7 @@ class RegisterComponent extends Component
     public $email = '';
     public $password = '';
     public $password_confirmation = '';
+    public $registration_code = '';
     public $buttonText = 'Create Account';
     public $error = '';
     public $success = '';
@@ -34,7 +35,27 @@ class RegisterComponent extends Component
         'password.required' => 'Password is required.',
         'password.min' => 'Password must be at least 8 characters.',
         'password.confirmed' => 'Password confirmation does not match.',
+        'registration_code.required' => 'Registration code is required.',
+        'registration_code.correct' => 'Invalid registration code.',
     ];
+
+    public function mount()
+    {
+        // Add registration code validation rule if environment variable is set
+        if ($this->isRegistrationCodeRequired()) {
+            $this->rules['registration_code'] = 'required|string';
+        }
+    }
+
+    public function isRegistrationCodeRequired()
+    {
+        return !empty(env('OMP_REGISTRATION_CODE'));
+    }
+
+    public function getRequiredRegistrationCode()
+    {
+        return env('OMP_REGISTRATION_CODE');
+    }
 
     public function register()
     {
@@ -43,7 +64,21 @@ class RegisterComponent extends Component
         $this->success = '';
 
         try {
+            // Add registration code validation rule if required
+            if ($this->isRegistrationCodeRequired()) {
+                $this->rules['registration_code'] = 'required|string';
+            }
+
             $this->validate();
+
+            // Validate registration code if required
+            if ($this->isRegistrationCodeRequired()) {
+                if ($this->registration_code !== $this->getRequiredRegistrationCode()) {
+                    $this->buttonText = 'Create Account';
+                    $this->error = 'Invalid registration code.';
+                    return;
+                }
+            }
 
             // Create the user
             $user = User::create([
