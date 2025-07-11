@@ -20,6 +20,19 @@ Route::get('/login', LoginComponent::class)->name('login');
 Route::get('/register', RegisterComponent::class)->name('register');
 Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
+// Public share route (no authentication required)
+Route::get('/share/{token}', VideoWatch::class)->name('videos.share');
+
+// Public video assets for shared videos (no authentication required)
+Route::get('/share/{token}/raw', [VideoController::class, "shareRaw"])->name('videos.share.raw');
+Route::get('/share/{token}/thumbnail.jpg', [VideoController::class, "shareThumbnail"])->name('videos.share.thumbnail');
+
+// Embed route for social media players
+Route::get('/share/{token}/embed', [VideoController::class, "shareEmbed"])->name('videos.share.embed');
+
+// oEmbed endpoint for rich embeds
+Route::get('/oembed', [VideoController::class, "oEmbed"])->name('oembed');
+
 // Routes (for authenticated users)
 Route::middleware('auth')->group(function () {
     // Homepage

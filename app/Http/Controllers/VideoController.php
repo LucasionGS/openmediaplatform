@@ -432,4 +432,149 @@ class VideoController extends Controller
             'memory_limit' => ini_get('memory_limit')
         ]);
     }
+
+    /**
+     * Stream raw video for shared videos using share token
+     */
+    public function shareRaw(string $token)
+    {
+        // Find video by share token
+        $video = Video::findByShareToken($token);
+        
+        if (!$video) {
+            abort(404, 'Shared video not found or share link has expired');
+        }
+
+        // Stream the video file using the same logic as the authenticated raw method
+        $path = $video->getPath();
+        $size = $video->getSize();
+        $stream = fopen($path, 'rb');
+
+        $headers = [
+            'Content-Type' => 'video/mp4',
+            'Content-Disposition' => 'inline; filename="' . $video->vid . '.mp4"',
+            'Accept-Ranges' => 'bytes',
+        ];
+
+        $start = 0;
+        $length = $size;
+
+        if (isset($_SERVER['HTTP_RANGE'])) {
+            $range = $_SERVER['HTTP_RANGE'];
+            list(, $range) = explode('=', $range, 2);
+            list($start, $end) = explode('-', $range);
+            $start = intval($start);
+            $end = $end ? intval($end) : $size - 1;
+            $length = $end - $start + 1;
+
+            fseek($stream, $start);
+            $headers['Content-Range'] = "bytes $start-$end/$size";
+            $headers['Content-Length'] = $length;
+        } else {
+            $headers['Content-Length'] = $size;
+        }
+
+        return response()->stream(function () use ($stream, $length) {
+            echo fread($stream, $length);
+            fclose($stream);
+        }, isset($headers['Content-Range']) ? 206 : 200, $headers);
+    }
+
+    /**
+     * Get thumbnail for shared videos using share token
+     */
+    public function shareThumbnail(string $token)
+    {
+        // Find video by share token
+        $video = Video::findByShareToken($token);
+        
+        if (!$video) {
+            abort(404, 'Shared video not found or share link has expired');
+        }
+
+        $thumbnailPath = $video->getThumbnailPath();
+        
+        // If thumbnail doesn't exist, try to generate it
+        if (!file_exists($thumbnailPath)) {
+            \Log::info("Thumbnail not found, attempting to generate: " . $thumbnailPath);
+            $video->generateThumbnail($video->duration ? $video->duration / 2 : 1);
+        }
+        
+        // If thumbnail still doesn't exist, return a default placeholder
+        if (!file_exists($thumbnailPath)) {
+            \Log::warning("Could not generate thumbnail, returning default");
+            return $this->getDefaultThumbnail();
+        }
+        
+        // Return the thumbnail file with proper caching headers
+        return response()->file($thumbnailPath, [
+            'Content-Type' => 'image/jpeg',
+            'Cache-Control' => 'public, max-age=3600'
+        ]);
+    }
+
+    /**
+     * Get embed player for shared videos (for social media embeds)
+     */
+    public function shareEmbed(string $token)
+    {
+        // Find video by share token
+        $video = Video::findByShareToken($token);
+        
+        if (!$video) {
+            abort(404, 'Shared video not found or share link has expired');
+        }
+
+        return view('embed.video-player', [
+            'video' => $video,
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * oEmbed endpoint for rich embeds
+     */
+    public function oEmbed(Request $request)
+    {
+        $url = $request->input('url');
+        $maxwidth = $request->input('maxwidth', 1280);
+        $maxheight = $request->input('maxheight', 720);
+        $format = $request->input('format', 'json');
+        
+        // Extract token from URL
+        if (preg_match('/\/share\/([a-zA-Z0-9]+)/', $url, $matches)) {
+            $token = $matches[1];
+            $video = Video::findByShareToken($token);
+            
+            if (!$video) {
+                abort(404, 'Video not found');
+            }
+            
+            $embedUrl = route('videos.share.embed', ['token' => $token]);
+            $thumbnailUrl = route('videos.share.thumbnail', ['token' => $token]);
+            
+            $response = [
+                'version' => '1.0',
+                'type' => 'video',
+                'width' => min($maxwidth, 1280),
+                'height' => min($maxheight, 720),
+                'title' => $video->title,
+                'author_name' => $video->user->getChannelName(),
+                'provider_name' => \App\Models\SiteSetting::get('site_title', 'Open Media Platform'),
+                'provider_url' => url('/'),
+                'thumbnail_url' => $thumbnailUrl,
+                'thumbnail_width' => 1280,
+                'thumbnail_height' => 720,
+                'html' => '<iframe src="' . $embedUrl . '" width="' . min($maxwidth, 1280) . '" height="' . min($maxheight, 720) . '" frameborder="0" allowfullscreen></iframe>'
+            ];
+            
+            if ($format === 'xml') {
+                return response()->view('oembed.xml', $response)->header('Content-Type', 'application/xml');
+            }
+            
+            return response()->json($response);
+        }
+        
+        abort(400, 'Invalid URL format');
+    }
 }

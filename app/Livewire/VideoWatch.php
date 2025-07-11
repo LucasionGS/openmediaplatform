@@ -20,10 +20,45 @@ class VideoWatch extends Component
     public $userEngagement = null;
     public $showReplies = [];
     public $isSubscribed = false;
+    public $isSharedView = false;
+    public $showShareModal = false;
 
-    public function mount(Video $video)
+    public function mount($video = null, $token = null)
     {
-        $this->video = $video;
+        // Check if this is a shared view (accessed via /share/{token} route)
+        $this->isSharedView = request()->routeIs('videos.share');
+        
+        if ($this->isSharedView) {
+            // Handle shared view with token
+            $token = $token ?? request()->route('token');
+            
+            if (!$token) {
+                abort(404, 'Share token required');
+            }
+            
+            $foundVideo = Video::findByShareToken($token);
+
+            if (!$foundVideo) {
+                return abort(404, 'Shared video not found or share link has expired');
+            }
+            
+            $this->video = $foundVideo;
+            
+            if (!$this->video) {
+                abort(404, 'Shared video not found or share link has expired');
+            }
+            
+            // If user is logged in and accessing shared link, redirect to regular watch page
+            if (Auth::check()) {
+                return redirect()->route('videos.show', $this->video);
+            }
+        } else {
+            // Handle regular authenticated view with video object
+            if (!$video) {
+                abort(404, 'Video not found');
+            }
+            $this->video = $video;
+        }
         
         // Record view
         $this->recordView();
@@ -251,6 +286,51 @@ class VideoWatch extends Component
         }
     }
 
+    public function openShareModal()
+    {
+        $this->showShareModal = true;
+    }
+
+    public function closeShareModal()
+    {
+        $this->showShareModal = false;
+    }
+
+    public function generateShareLink()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        // Only video owner can generate share links
+        if (Auth::id() !== $this->video->user_id) {
+            session()->flash('error', 'Only the video owner can create share links.');
+            return;
+        }
+
+        if (!$this->video->share_token) {
+            $this->video->generateShareToken();
+        }
+
+        session()->flash('success', 'Share link generated successfully!');
+    }
+
+    public function revokeShareLink()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        // Only video owner can revoke share links
+        if (Auth::id() !== $this->video->user_id) {
+            session()->flash('error', 'Only the video owner can revoke share links.');
+            return;
+        }
+
+        $this->video->revokeShare();
+        session()->flash('success', 'Share link revoked successfully!');
+    }
+
     public function render()
     {
         $comments = $this->video->topLevelComments()
@@ -258,20 +338,35 @@ class VideoWatch extends Component
             ->latest()
             ->get();
 
-        $relatedVideos = Video::public()
-            ->with(['user'])
-            ->where('vid', '!=', $this->video->vid)
-            ->when($this->video->category, function ($query) {
-                $query->byCategory($this->video->category);
-            })
-            ->orderBy('views', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        // Only load related videos for authenticated users (not for shared views)
+        $relatedVideos = collect();
+        if (!$this->isSharedView) {
+            $relatedVideos = Video::public()
+                ->with(['user'])
+                ->where('vid', '!=', $this->video->vid)
+                ->when($this->video->category, function ($query) {
+                    $query->byCategory($this->video->category);
+                })
+                ->orderBy('views', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+        }
 
-        return view('livewire.video-watch', [
+        $view = view('livewire.video-watch', [
             'comments' => $comments,
             'relatedVideos' => $relatedVideos,
+            'isSharedView' => $this->isSharedView,
         ]);
+
+        // Use different layout for shared views
+        if ($this->isSharedView) {
+            return $view->layout('components.layouts.shared', [
+                'title' => $this->video->title,
+                'video' => $this->video
+            ]);
+        }
+
+        return $view->layout('components.layouts.app');
     }
 }

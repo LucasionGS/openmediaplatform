@@ -31,6 +31,9 @@ class Video extends Model
         'category',
         'tags',
         'published_at',
+        'share_token',
+        'is_shareable',
+        'share_expires_at',
     ];
 
     protected $primaryKey = 'vid';
@@ -39,6 +42,8 @@ class Video extends Model
     protected $casts = [
         'tags' => 'array',
         'published_at' => 'datetime',
+        'share_expires_at' => 'datetime',
+        'is_shareable' => 'boolean',
         'likes' => 'integer',
         'dislikes' => 'integer',
         'views' => 'integer',
@@ -427,6 +432,62 @@ class Video extends Model
     {
         $categories = self::getAvailableCategories();
         return $categories[$this->category] ?? ucfirst($this->category ?? 'Uncategorized');
+    }
+
+    // Share functionality methods
+    public function generateShareToken(): string
+    {
+        $this->share_token = \Illuminate\Support\Str::random(32);
+        $this->is_shareable = true;
+        $this->save();
+        
+        return $this->share_token;
+    }
+
+    public function getShareUrl(): ?string
+    {
+        if (!$this->is_shareable || !$this->share_token) {
+            return null;
+        }
+
+        if ($this->share_expires_at && $this->share_expires_at < now()) {
+            return null;
+        }
+
+        return route('videos.share', ['token' => $this->share_token]);
+    }
+
+    public function revokeShare(): void
+    {
+        $this->share_token = null;
+        $this->is_shareable = false;
+        $this->share_expires_at = null;
+        $this->save();
+    }
+
+    public function isShareValid(): bool
+    {
+        if (!$this->is_shareable || !$this->share_token) {
+            return false;
+        }
+
+        if ($this->share_expires_at && $this->share_expires_at < now()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function findByShareToken(string $token): ?self
+    {
+        return self::with('user')
+                  ->where('share_token', $token)
+                  ->where('is_shareable', true)
+                  ->where(function ($query) {
+                      $query->whereNull('share_expires_at')
+                            ->orWhere('share_expires_at', '>', now());
+                  })
+                  ->first();
     }
 
     // File management methods
