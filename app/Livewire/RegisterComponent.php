@@ -80,6 +80,11 @@ class RegisterComponent extends Component
                 }
             }
 
+            $isFirst = false;
+            if (!User::first(["id"])) {
+                $isFirst = true;
+            }
+
             // Create the user
             $user = User::create([
                 'name' => $this->name,
@@ -88,6 +93,12 @@ class RegisterComponent extends Component
                 'channel_name' => $this->name, // Use name as default channel name
                 'email_verified_at' => now(), // Auto-verify for simplicity
             ]);
+
+            if ($isFirst) {
+                $user->role = User::ROLE_ADMIN; // First user is admin
+                $user->save();
+            }
+
 
             // Log the user in
             Auth::login($user);

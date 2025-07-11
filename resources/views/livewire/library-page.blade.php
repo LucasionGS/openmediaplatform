@@ -264,7 +264,8 @@
                                 <a href="{{ route('playlists.show', $playlist) }}" class="block relative">
                                     <div class="w-40 h-24 bg-gray-200 rounded-lg overflow-hidden shadow-sm">
                                         @if($playlist->thumbnail_path)
-                                            <img src="{{ Storage::url($playlist->thumbnail_path) }}" 
+                                            {{-- <img src="{{ Storage::url($playlist->thumbnail_path) }}"  --}}
+                                            <img src="{{ asset('sf/' . $playlist->thumbnail_path) }}" 
                                                  alt="{{ $playlist->title }}" 
                                                  class="w-full h-full object-cover">
                                         @elseif($playlist->videos_count > 0)

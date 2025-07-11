@@ -14,6 +14,11 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    // Role constants
+    const ROLE_ADMIN = 'admin';
+    const ROLE_MODERATOR = 'moderator';
+    const ROLE_USER = 'user';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +28,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'channel_name',
         'channel_description',
         'profile_picture',
@@ -123,5 +129,36 @@ class User extends Authenticatable
     {
         $this->subscribers_count = $this->subscribers()->count();
         $this->save();
+    }
+
+    // Role Helper Methods
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isModerator(): bool
+    {
+        return $this->role === self::ROLE_MODERATOR;
+    }
+
+    public function isUser(): bool
+    {
+        return $this->role === self::ROLE_USER;
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function canModerateContent(): bool
+    {
+        return $this->isAdmin() || $this->isModerator();
+    }
+
+    public function canManageSite(): bool
+    {
+        return $this->isAdmin();
     }
 }

@@ -4,7 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ $title ?? 'OpenMediaPlatform' }}</title>
+        <link rel="icon" type="image/png" href="/favicon">
+        <title>{{ $title ?? \App\Models\SiteSetting::get('site_title', 'OpenMediaPlatform') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
         @livewireStyles
     </head>
@@ -19,12 +20,21 @@
                         </svg>
                     </button>
                     <a href="{{ route('home') }}" class="flex items-center space-x-1 md:space-x-2">
-                        <div class="w-6 h-6 md:w-8 md:h-8 bg-red-600 rounded-sm flex items-center justify-center">
-                            <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                        </div>
-                        <span class="text-lg md:text-xl font-bold hidden sm:block">OpenMedia</span>
+                        @php
+                            $siteIcon = \App\Models\SiteSetting::get('site_icon');
+                            $siteTitle = \App\Models\SiteSetting::get('site_title', 'OpenMediaPlatform');
+                        @endphp
+                        
+                        @if($siteIcon)
+                            <img src="{{ asset('sf/' . $siteIcon) }}" alt="{{ $siteTitle }}" class="w-6 h-6 md:w-8 md:h-8 object-cover">
+                        @else
+                            <div class="w-6 h-6 md:w-8 md:h-8 bg-red-600 rounded-sm flex items-center justify-center">
+                                <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                            </div>
+                        @endif
+                        <span class="text-lg md:text-xl font-bold hidden sm:block">{{ Str::limit($siteTitle, 15) }}</span>
                     </a>
                 </div>
 
@@ -80,6 +90,18 @@
                                     <a href="{{ route('channel.show', auth()->user()) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Channel</a>
                                     <a href="{{ route('videos.upload') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 sm:hidden">Upload</a>
                                     <a href="{{ route('profile.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                    @if(auth()->user()->isAdmin())
+                                        <div class="border-t border-gray-100"></div>
+                                        <a href="{{ route('admin.settings') }}" class="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 font-medium">
+                                            <div class="flex items-center space-x-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                <span>Admin Settings</span>
+                                            </div>
+                                        </a>
+                                    @endif
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">

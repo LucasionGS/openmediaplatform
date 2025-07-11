@@ -27,7 +27,7 @@ class EditVideoPage extends Component
     public function mount(Video $video)
     {
         // Check if user is authorized to edit this video
-        if (!auth()->check() || auth()->id() !== $video->user_id) {
+        if (!auth()->check() || (!auth()->user()->canModerateContent() && auth()->id() !== $video->user_id)) {
             abort(403, 'Unauthorized');
         }
 

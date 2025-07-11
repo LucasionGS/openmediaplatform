@@ -53,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/unsubscribe/{user}', [UserController::class, 'unsubscribe'])->name('unsubscribe');
     Route::get('/profile/settings', ProfileSettings::class)->name('profile.settings');
     
+    // Admin routes (protected by role middleware)
+    Route::get('/admin/settings', \App\Livewire\AdminSettings::class)->name('admin.settings')->middleware('role:admin');
+    
     // Playlist management routes
     Route::get('/playlists/user', [PlaylistController::class, 'getUserPlaylists'])->name('playlists.user');
     Route::post('/playlists', [PlaylistController::class, 'store'])->name('playlists.store');
@@ -91,7 +94,7 @@ Route::middleware('auth')->group(function () {
         $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
         
         // Additional security: Only allow certain file types for direct serving
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 'pdf', 'txt'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv', 'pdf', 'txt', "ico"];
         
         if (!in_array($extension, $allowedExtensions)) {
             \Log::warning('File type not allowed: ' . $extension . ' for file: ' . $filePath);
@@ -116,4 +119,14 @@ Route::middleware('auth')->group(function () {
             'Cache-Control' => 'public, max-age=3600',
         ]);
     })->where('path', '.*')->name('storage.file');
+});
+
+Route::get('/favicon', function () {
+    $siteIcon = \App\Models\SiteSetting::get('site_icon');
+    if ($siteIcon) {
+        return response()->file(storage_path('app/public/' . $siteIcon));
+    }
+
+    // Fallback to default favicon if no site icon is set
+    return response()->file(public_path('favicon.ico'));
 });

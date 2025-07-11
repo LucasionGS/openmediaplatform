@@ -27,7 +27,8 @@
         <!-- Playlist Banner -->
         <div class="relative h-48 md:h-64 bg-gradient-to-br from-red-500 to-pink-600">
             @if($playlist->thumbnail_path)
-                <img src="{{ Storage::url($playlist->thumbnail_path) }}" alt="{{ $playlist->title }}" class="w-full h-full object-cover">
+                {{-- <img src="{{ Storage::url($playlist->thumbnail_path) }}" alt="{{ $playlist->title }}" class="w-full h-full object-cover"> --}}
+                <img src="{{ asset('sf/' . $playlist->thumbnail_path) }}" alt="{{ $playlist->title }}" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black bg-opacity-40"></div>
             @else
                 <div class="absolute inset-0 flex items-center justify-center">
