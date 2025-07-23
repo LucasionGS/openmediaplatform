@@ -29,12 +29,12 @@ Route::get('/share/{token}', function ($token) {
     // Determine if token belongs to video or image
     $video = \App\Models\Video::findByShareToken($token);
     if ($video) {
-        return app(VideoWatch::class);
+        return redirect()->route('share.video', ['token' => $token]);
     }
     
     $image = \App\Models\Image::findByShareToken($token);
     if ($image) {
-        return app(ImageViewPage::class);
+        return redirect()->route('share.image', ['token' => $token]);
     }
     
     abort(404, 'Shared content not found');
