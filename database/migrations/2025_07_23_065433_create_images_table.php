@@ -81,8 +81,8 @@ return new class extends Migration
         // Drop the old video_id column and its foreign key and indexes
         Schema::table('comments', function (Blueprint $table) {
             // Drop indexes that reference video_id first
-            $table->dropIndex('comments_video_id_parent_id_index');
             $table->dropForeign(['video_id']);
+            $table->dropIndex('comments_video_id_parent_id_index');
             $table->dropColumn('video_id');
         });
     }
