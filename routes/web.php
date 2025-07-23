@@ -2,10 +2,14 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\PlaylistController;
 use App\Livewire\ChannelPage;
+use App\Livewire\EditImagePage;
 use App\Livewire\EditVideoPage;
 use App\Livewire\Homepage;
+use App\Livewire\ImageUploadPage;
+use App\Livewire\ImageViewPage;
 use App\Livewire\LibraryPage;
 use App\Livewire\LoginComponent;
 use App\Livewire\ProfileSettings;
@@ -55,6 +59,17 @@ Route::middleware('auth')->group(function () {
 
     // Upload page (protected)
     Route::get('/upload', UploadPage::class)->name('videos.upload');
+    
+    // Image routes
+    Route::get('/images', [ImageController::class, "index"])->name('images.index');
+    Route::post('/images', [ImageController::class, "store"])->name('images.store')->middleware('auth');
+    Route::get('/images/upload', ImageUploadPage::class)->name('images.upload')->middleware('auth');
+    Route::get('/images/{image}', ImageViewPage::class)->name('images.show');
+    Route::get('/images/{image}/edit', EditImagePage::class)->name('images.edit')->middleware('auth');
+    Route::get('/images/{image}/{filename}', [ImageController::class, "serveFile"])->name('images.file');
+    Route::put('/images/{image}', [ImageController::class, "update"])->name('images.update')->middleware('auth');
+    Route::delete('/images/{image}', [ImageController::class, "destroy"])->name('images.destroy')->middleware('auth');
+    Route::get('/shared/images/{shareToken}', [ImageController::class, "shareRaw"])->name('images.share.raw');
     
     // Channel routes
     Route::get('/channel/{user}', ChannelPage::class)->name('channel.show');

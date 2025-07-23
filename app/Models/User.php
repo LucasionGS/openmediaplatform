@@ -69,6 +69,11 @@ class User extends Authenticatable
         return $this->hasMany(Video::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(Image::class);
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
@@ -129,6 +134,11 @@ class User extends Authenticatable
     {
         $this->subscribers_count = $this->subscribers()->count();
         $this->save();
+    }
+
+    public function getSubscriberCount(): int
+    {
+        return $this->subscribers_count ?? 0;
     }
 
     // Role Helper Methods

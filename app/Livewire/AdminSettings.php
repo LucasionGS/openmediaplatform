@@ -20,6 +20,10 @@ class AdminSettings extends Component
     public $newSiteIcon;
     public string $activeTab = 'general';
     
+    // Upload limit properties
+    public int $maxImageSize = 10240; // KB (10MB default)
+    public int $maxImageCount = 50;   // Maximum images per post
+    
     // User management properties
     public $search = '';
     public $roleFilter = '';
@@ -32,6 +36,8 @@ class AdminSettings extends Component
         'siteTitle' => 'required|string|max:255',
         'newSiteIcon' => 'nullable|file|max:2048|mimes:png,jpg,jpeg,gif,svg,ico',
         'editingUserRole' => 'required|in:admin,moderator,user',
+        'maxImageSize' => 'required|integer|min:1|max:102400', // 1KB to 100MB
+        'maxImageCount' => 'required|integer|min:1|max:100',   // 1 to 100 images
     ];
 
     protected $messages = [
@@ -41,6 +47,14 @@ class AdminSettings extends Component
         'newSiteIcon.mimes' => 'Site icon must be a PNG, JPG, JPEG, GIF, SVG, or ICO file.',
         'editingUserRole.required' => 'Role is required.',
         'editingUserRole.in' => 'Invalid role selected.',
+        'maxImageSize.required' => 'Maximum image size is required.',
+        'maxImageSize.integer' => 'Maximum image size must be a number.',
+        'maxImageSize.min' => 'Maximum image size must be at least 1 KB.',
+        'maxImageSize.max' => 'Maximum image size cannot exceed 100 MB.',
+        'maxImageCount.required' => 'Maximum image count is required.',
+        'maxImageCount.integer' => 'Maximum image count must be a number.',
+        'maxImageCount.min' => 'Maximum image count must be at least 1.',
+        'maxImageCount.max' => 'Maximum image count cannot exceed 100.',
     ];
 
     protected $listeners = ['refreshUsers' => '$refresh'];
@@ -55,6 +69,10 @@ class AdminSettings extends Component
         // Load current settings
         $this->siteTitle = SiteSetting::get('site_title', 'OpenMediaPlatform');
         $this->siteIcon = SiteSetting::get('site_icon');
+        
+        // Load upload limit settings with defaults
+        $this->maxImageSize = (int) SiteSetting::get('max_image_size', 10240); // 10MB default
+        $this->maxImageCount = (int) SiteSetting::get('max_image_count', 50);   // 50 images default
     }
 
     public function setActiveTab($tab)
@@ -105,6 +123,19 @@ class AdminSettings extends Component
 
             $this->dispatch('show-message', ['type' => 'success', 'message' => 'Site icon removed successfully!']);
         }
+    }
+
+    public function updateUploadLimits()
+    {
+        $this->validate([
+            'maxImageSize' => 'required|integer|min:1|max:102400',
+            'maxImageCount' => 'required|integer|min:1|max:100',
+        ]);
+
+        SiteSetting::set('max_image_size', $this->maxImageSize, 'integer', 'Maximum image file size in KB');
+        SiteSetting::set('max_image_count', $this->maxImageCount, 'integer', 'Maximum number of images per post');
+
+        $this->dispatch('show-message', ['type' => 'success', 'message' => 'Upload limits updated successfully!']);
     }
 
     // User Management Methods

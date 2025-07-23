@@ -16,6 +16,22 @@
                         Latest Videos
                     </button>
                     <button 
+                        wire:click="setActiveTab('images')"
+                        class="py-2 border-b-2 font-medium text-sm transition-colors
+                               {{ $activeTab === 'images' 
+                                  ? 'border-red-600 text-red-600' 
+                                  : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                        Latest Images
+                    </button>
+                    <button 
+                        wire:click="setActiveTab('all')"
+                        class="py-2 border-b-2 font-medium text-sm transition-colors
+                               {{ $activeTab === 'all' 
+                                  ? 'border-red-600 text-red-600' 
+                                  : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                        All Media
+                    </button>
+                    <button 
                         wire:click="setActiveTab('channels')"
                         class="py-2 border-b-2 font-medium text-sm transition-colors
                                {{ $activeTab === 'channels' 
@@ -187,6 +203,166 @@
             @if($subscriptions->hasPages())
                 <div class="mt-8">
                     {{ $subscriptions->links() }}
+                </div>
+            @endif
+
+        @elseif($activeTab === 'images')
+            <!-- Latest Images from Subscriptions -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @forelse($subscriptionImages as $image)
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                        <a href="{{ route('images.show', $image) }}" class="block">
+                            <!-- Thumbnail -->
+                            <div class="relative aspect-square bg-gray-100 rounded-t-lg overflow-hidden">
+                                <img src="{{ $image->getThumbnailUrl() }}" 
+                                     alt="{{ $image->title }}" 
+                                     class="w-full h-full object-cover">
+                                
+                                <!-- Image Icon -->
+                                <div class="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Image Info -->
+                            <div class="p-3">
+                                <!-- Channel Avatar & Title -->
+                                <div class="flex space-x-3">
+                                    <div class="flex-shrink-0">
+                                        @if($image->user && $image->user->profile_picture)
+                                            <img src="{{ asset('sf/' . $image->user->profile_picture) }}" 
+                                                 alt="{{ $image->user->getChannelName() }}" 
+                                                 class="w-8 h-8 rounded-full object-cover">
+                                        @else
+                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                                {{ substr($image->user ? $image->user->getChannelName() : 'Unknown', 0, 1) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5">
+                                            {{ $image->title }}
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            {{ $image->user ? $image->user->getChannelName() : 'Unknown Channel' }}
+                                        </p>
+                                        <div class="flex items-center text-xs text-gray-500 mt-1 space-x-1">
+                                            <span>{{ $image->getFormattedViews() }}</span>
+                                            <span>•</span>
+                                            <span>{{ $image->getTimeAgo() }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900">No images from subscriptions</h3>
+                            <p class="text-gray-500">Subscribe to channels to see their latest images here!</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            @if($subscriptionImages->hasPages())
+                <div class="mt-8">
+                    {{ $subscriptionImages->links() }}
+                </div>
+            @endif
+
+        @elseif($activeTab === 'all')
+            <!-- All Media from Subscriptions -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @forelse($subscriptionMedia as $item)
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                        <a href="{{ $item->media_type === 'video' ? route('videos.show', $item) : route('images.show', $item) }}" class="block">
+                            <!-- Thumbnail -->
+                            <div class="relative {{ $item->media_type === 'video' ? 'aspect-video' : 'aspect-square' }} bg-gray-100 rounded-t-lg overflow-hidden">
+                                <img src="{{ $item->getThumbnailUrl() }}" 
+                                     alt="{{ $item->title }}" 
+                                     class="w-full h-full object-cover">
+                                
+                                @if($item->media_type === 'video')
+                                    <!-- Duration Badge for Videos -->
+                                    @if($item->duration)
+                                        <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                            {{ $item->getFormattedDuration() }}
+                                        </div>
+                                    @endif
+                                    
+                                    <!-- Video Icon -->
+                                    <div class="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                                        </svg>
+                                    </div>
+                                @else
+                                    <!-- Image Icon -->
+                                    <div class="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Media Info -->
+                            <div class="p-3">
+                                <!-- Channel Avatar & Title -->
+                                <div class="flex space-x-3">
+                                    <div class="flex-shrink-0">
+                                        @if($item->user && $item->user->profile_picture)
+                                            <img src="{{ asset('sf/' . $item->user->profile_picture) }}" 
+                                                 alt="{{ $item->user->getChannelName() }}" 
+                                                 class="w-8 h-8 rounded-full object-cover">
+                                        @else
+                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                                {{ substr($item->user ? $item->user->getChannelName() : 'Unknown', 0, 1) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5">
+                                            {{ $item->title }}
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            {{ $item->user ? $item->user->getChannelName() : 'Unknown Channel' }}
+                                        </p>
+                                        <div class="flex items-center text-xs text-gray-500 mt-1 space-x-1">
+                                            <span>{{ $item->getFormattedViews() }}</span>
+                                            <span>•</span>
+                                            <span>{{ $item->getTimeAgo() }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900">No media from subscriptions</h3>
+                            <p class="text-gray-500">Subscribe to channels to see their latest content here!</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            @if($subscriptionMedia->hasPages())
+                <div class="mt-8">
+                    {{ $subscriptionMedia->links() }}
                 </div>
             @endif
         @endif

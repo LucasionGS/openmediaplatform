@@ -63,11 +63,39 @@
                 <!-- User Actions -->
                 <div class="flex items-center space-x-1 md:space-x-2">
                     @auth
-                        <a href="{{ route('videos.upload') }}" class="p-2 hover:bg-gray-100 rounded-full hidden sm:block" title="Create">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                        </a>
+                        <!-- Upload Dropdown -->
+                        <div class="relative hidden sm:block" x-data="{ open: false }">
+                            <button @click="open = !open" 
+                                    class="p-2 hover:bg-gray-100 rounded-full" 
+                                    title="Create">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" 
+                                 @click.outside="open = false"
+                                 x-transition
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                                <div class="py-1">
+                                    <a href="{{ route('videos.upload') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Upload Video
+                                    </a>
+                                    <a href="{{ route('images.upload') }}" 
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Upload Images
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <button class="p-2 hover:bg-gray-100 rounded-full hidden sm:block" title="Notifications">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
@@ -91,7 +119,8 @@
                                         {{ auth()->user()->name }}
                                     </div>
                                     <a href="{{ route('channel.show', auth()->user()) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Channel</a>
-                                    <a href="{{ route('videos.upload') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 sm:hidden">Upload</a>
+                                    <a href="{{ route('videos.upload') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 sm:hidden">Upload Video</a>
+                                    <a href="{{ route('images.upload') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 sm:hidden">Upload Images</a>
                                     <a href="{{ route('profile.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                                     @if(auth()->user()->isAdmin())
                                         <div class="border-t border-gray-100"></div>
@@ -181,10 +210,17 @@
                         <hr class="my-4">
                         
                         <a href="{{ route('videos.upload') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->routeIs('videos.upload') ? 'bg-gray-100' : '' }}">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
-                            <span>Upload</span>
+                            <span>Upload Video</span>
+                        </a>
+                        
+                        <a href="{{ route('images.upload') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->routeIs('images.upload') ? 'bg-gray-100' : '' }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Upload Images</span>
                         </a>
                     </div>
 

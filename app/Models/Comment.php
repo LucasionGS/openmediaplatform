@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Comment extends Model
 {
     protected $fillable = [
-        'video_id',
+        'commentable_id',
+        'commentable_type',
         'user_id',
         'parent_id',
         'content',
@@ -22,9 +24,9 @@ class Comment extends Model
         'dislikes' => 'integer',
     ];
 
-    public function video(): BelongsTo
+    public function commentable(): MorphTo
     {
-        return $this->belongsTo(Video::class, 'video_id', 'vid');
+        return $this->morphTo();
     }
 
     public function user(): BelongsTo

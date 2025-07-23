@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\User;
 use App\Models\Video;
+use App\Models\Image;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -87,6 +88,14 @@ class ChannelPage extends Component
             ->paginate(12);
     }
 
+    public function getImagesProperty()
+    {
+        return $this->user->images()
+            ->where('visibility', Image::VISIBILITY_PUBLIC)
+            ->latest('published_at')
+            ->paginate(12);
+    }
+
     public function getPlaylistsProperty()
     {
         return $this->user->playlists()
@@ -101,6 +110,7 @@ class ChannelPage extends Component
     {
         return view('livewire.channel-page', [
             'videos' => $this->videos,
+            'images' => $this->images,
             'playlists' => $this->playlists,
         ])->layout('components.layouts.app')
           ->title($this->user->getChannelName() . ' - OpenMediaPlatform');

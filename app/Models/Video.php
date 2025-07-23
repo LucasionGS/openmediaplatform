@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Nette\Utils\Random;
 use Pawlox\VideoThumbnail\Facade\VideoThumbnail;
 use Illuminate\Support\Facades\Storage;
@@ -285,14 +286,14 @@ class Video extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function comments(): HasMany
+    public function comments(): MorphMany
     {
-        return $this->hasMany(Comment::class, 'video_id', 'vid');
+        return $this->morphMany(Comment::class, 'commentable');
     }
 
-    public function topLevelComments(): HasMany
+    public function topLevelComments(): MorphMany
     {
-        return $this->hasMany(Comment::class, 'video_id', 'vid')
+        return $this->morphMany(Comment::class, 'commentable')
                     ->whereNull('parent_id')
                     ->with(['user', 'replies']);
     }

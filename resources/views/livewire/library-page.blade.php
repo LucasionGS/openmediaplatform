@@ -27,6 +27,19 @@
                     <span>My Videos</span>
                 </div>
             </a>
+
+          <a href="{{ route('library.tab', 'images') }}"
+                class="py-2 border-b-2 font-medium text-sm transition-colors
+                       {{ $activeTab === 'my-images' 
+                          ? 'border-red-600 text-red-600' 
+                          : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>My Images</span>
+                </div>
+            </a>
           
             <a href="{{ route('library.tab', 'history') }}"
                 class="py-2 border-b-2 font-medium text-sm transition-colors
@@ -51,6 +64,19 @@
                         <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
                     </svg>
                     <span>Liked Videos</span>
+                </div>
+            </a>
+
+            <a href="{{ route('library.tab', 'liked-images') }}"
+                class="py-2 border-b-2 font-medium text-sm transition-colors
+                       {{ $activeTab === 'liked-images' 
+                          ? 'border-red-600 text-red-600' 
+                          : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
+                    </svg>
+                    <span>Liked Images</span>
                 </div>
             </a>
             
@@ -490,6 +516,148 @@
             @if($this->myVideos->hasPages())
                 <div class="mt-8">
                     {{ $this->myVideos->links() }}
+                </div>
+            @endif
+
+        @elseif($activeTab === 'my-images')
+            <!-- My Images Tab -->
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-gray-900">My Images</h2>
+                <a href="{{ route('images.upload') }}" 
+                   class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors inline-flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Upload Image</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @forelse($myImages as $image)
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow relative group">
+                        <a href="{{ route('images.show', $image) }}" class="block">
+                            <!-- Thumbnail -->
+                            <div class="relative aspect-square bg-gray-100 rounded-t-lg overflow-hidden">
+                                <img src="{{ $image->getThumbnailUrl() }}" 
+                                     alt="{{ $image->title }}" 
+                                     class="w-full h-full object-cover">
+                            </div>
+
+                            <!-- Image Info -->
+                            <div class="p-3">
+                                <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5 mb-1">
+                                    {{ $image->title }}
+                                </h3>
+                                <div class="flex items-center text-xs text-gray-500 space-x-1">
+                                    <span>{{ $image->getFormattedViews() }}</span>
+                                    <span>•</span>
+                                    <span>{{ $image->getTimeAgo() }}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                 {{ $image->visibility === 'public' ? 'bg-green-100 text-green-800' : 
+                                                    ($image->visibility === 'private' ? 'bg-red-100 text-red-800' : 
+                                                     'bg-yellow-100 text-yellow-800') }}">
+                                        {{ ucfirst($image->visibility) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Edit Button -->
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a href="{{ route('images.edit', $image) }}" 
+                               class="inline-flex items-center justify-center w-8 h-8 bg-black bg-opacity-75 text-white rounded-full hover:bg-opacity-100 transition-all"
+                               title="Edit image"
+                               onclick="event.stopPropagation();">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900">No images</h3>
+                            <p class="text-gray-500 mb-4">You haven't uploaded any images yet.</p>
+                            <a href="{{ route('images.upload') }}" 
+                               class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Upload your first image
+                            </a>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            @if($myImages->hasPages())
+                <div class="mt-8">
+                    {{ $myImages->links() }}
+                </div>
+            @endif
+
+        @elseif($activeTab === 'liked-images')
+            <!-- Liked Images Tab -->
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-gray-900">Liked Images</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @forelse($likedImages as $engagement)
+                    @if($engagement->image)
+                        <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <a href="{{ route('images.show', $engagement->image) }}" class="block">
+                                <!-- Thumbnail -->
+                                <div class="relative aspect-square bg-gray-100 rounded-t-lg overflow-hidden">
+                                    <img src="{{ $engagement->image->getThumbnailUrl() }}" 
+                                         alt="{{ $engagement->image->title }}" 
+                                         class="w-full h-full object-cover">
+                                </div>
+
+                                <!-- Image Info -->
+                                <div class="p-3">
+                                    <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5 mb-1">
+                                        {{ $engagement->image->title }}
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mb-1">
+                                        {{ $engagement->image->user->getChannelName() }}
+                                    </p>
+                                    <div class="flex items-center text-xs text-gray-500 space-x-1">
+                                        <span>{{ $engagement->image->getFormattedViews() }}</span>
+                                        <span>•</span>
+                                        <span>{{ $engagement->image->getTimeAgo() }}</span>
+                                    </div>
+                                    <div class="mt-2 text-xs text-gray-500">
+                                        Liked {{ $engagement->created_at->diffForHumans() }}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900">No liked images</h3>
+                            <p class="text-gray-500">Images you like will appear here.</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            @if($likedImages->hasPages())
+                <div class="mt-8">
+                    {{ $likedImages->links() }}
                 </div>
             @endif
         @endif

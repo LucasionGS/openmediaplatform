@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\Video;
+use App\Models\Image;
 use App\Models\VideoEngagement;
+use App\Models\ImageEngagement;
 use App\Models\WatchHistory;
 use App\Models\Playlist;
 use Livewire\Component;
@@ -36,10 +38,13 @@ class LibraryPage extends Component
     private array $validTabs = [
         'my-videos' => 'my-videos',
         'videos' => 'my-videos',
+        'my-images' => 'my-images',
+        'images' => 'my-images',
         'history' => 'watch-history',
         'watch-history' => 'watch-history',
         'likes' => 'liked-videos', 
         'liked-videos' => 'liked-videos',
+        'liked-images' => 'liked-images',
         'playlists' => 'playlists',
     ];
 
@@ -103,6 +108,29 @@ class LibraryPage extends Component
         return Video::where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage, pageName: 'my-videos-page');
+    }
+
+    public function getMyImagesProperty()
+    {
+        return Image::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage, pageName: 'my-images-page');
+    }
+
+    public function getLikedImagesProperty()
+    {
+        \Log::info('Getting liked images for user: ' . auth()->id());
+        
+        $liked = ImageEngagement::with(['image.user'])
+            ->where('user_id', auth()->id())
+            ->where('type', 'like')
+            ->whereHas('image') // Only include records where image exists
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage, pageName: 'liked-images-page');
+            
+        \Log::info('Liked images count: ' . $liked->total());
+        
+        return $liked;
     }
 
     public function clearWatchHistory()
@@ -224,7 +252,13 @@ class LibraryPage extends Component
 
     public function render()
     {
-        return view('livewire.library-page')
-            ->layout('components.layouts.app');
+        return view('livewire.library-page', [
+            'myVideos' => $this->myVideos,
+            'myImages' => $this->myImages,
+            'watchHistory' => $this->watchHistory,
+            'likedVideos' => $this->likedVideos,
+            'likedImages' => $this->likedImages,
+            'playlists' => $this->playlists,
+        ])->layout('components.layouts.app');
     }
 }

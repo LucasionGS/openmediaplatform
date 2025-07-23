@@ -35,6 +35,14 @@
                         Appearance
                     </button>
                     <button 
+                        wire:click="setActiveTab('uploads')"
+                        class="py-2 border-b-2 font-medium text-sm transition-colors
+                               {{ $activeTab === 'uploads' 
+                                  ? 'border-red-600 text-red-600' 
+                                  : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                        Upload Limits
+                    </button>
+                    <button 
                         wire:click="setActiveTab('users')"
                         class="py-2 border-b-2 font-medium text-sm transition-colors
                                {{ $activeTab === 'users' 
@@ -153,6 +161,72 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+        @elseif($activeTab === 'uploads')
+            <!-- Upload Limits Settings -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Upload Limits</h2>
+                
+                <form wire:submit.prevent="updateUploadLimits" class="space-y-6">
+                    <!-- Maximum Image Size -->
+                    <div>
+                        <label for="maxImageSize" class="block text-sm font-medium text-gray-700">Maximum Image Size (KB)</label>
+                        <input 
+                            type="number" 
+                            id="maxImageSize" 
+                            wire:model="maxImageSize" 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            placeholder="10240"
+                            min="1"
+                            max="102400"
+                        >
+                        @error('maxImageSize') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-sm text-gray-500">
+                            Maximum file size per image in kilobytes. Current: {{ number_format($maxImageSize / 1024, 1) }} MB
+                            (1 KB - 100 MB allowed)
+                        </p>
+                    </div>
+
+                    <!-- Maximum Image Count -->
+                    <div>
+                        <label for="maxImageCount" class="block text-sm font-medium text-gray-700">Maximum Images Per Post</label>
+                        <input 
+                            type="number" 
+                            id="maxImageCount" 
+                            wire:model="maxImageCount" 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            placeholder="50"
+                            min="1"
+                            max="100"
+                        >
+                        @error('maxImageCount') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-sm text-gray-500">
+                            Maximum number of images allowed per upload/post (1-100)
+                        </p>
+                    </div>
+
+                    <!-- Current Settings Display -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 mb-2">Current Limits</h3>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <div>• Maximum image size: <span class="font-semibold">{{ number_format($maxImageSize / 1024, 1) }} MB</span> ({{ number_format($maxImageSize) }} KB)</div>
+                            <div>• Maximum images per post: <span class="font-semibold">{{ $maxImageCount }}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end">
+                        <button 
+                            type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors"
+                            wire:loading.attr="disabled"
+                        >
+                            <span wire:loading.remove wire:target="updateUploadLimits">Save Upload Limits</span>
+                            <span wire:loading wire:target="updateUploadLimits">Saving...</span>
+                        </button>
+                    </div>
+                </form>
             </div>
 
         @elseif($activeTab === 'users')

@@ -33,6 +33,8 @@
                         <span>{{ number_format($subscriberCount) }} {{ $subscriberCount === 1 ? 'subscriber' : 'subscribers' }}</span>
                         <span>•</span>
                         <span>{{ $user->videos()->where('visibility', App\Models\Video::VISIBILITY_PUBLIC)->count() }} videos</span>
+                        <span>•</span>
+                        <span>{{ $user->images()->where('visibility', App\Models\Image::VISIBILITY_PUBLIC)->count() }} images</span>
                     </div>
                     @if($user->channel_description)
                         <p class="mt-3 text-gray-700 leading-relaxed">{{ $user->channel_description }}</p>
@@ -71,6 +73,14 @@
                                   ? 'border-red-600 text-red-600' 
                                   : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                         Videos
+                    </button>
+                    <button 
+                        wire:click="setActiveTab('images')"
+                        class="py-2 border-b-2 font-medium text-sm transition-colors
+                               {{ $activeTab === 'images' 
+                                  ? 'border-red-600 text-red-600' 
+                                  : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                        Images
                     </button>
                     <button 
                         wire:click="setActiveTab('playlists')"
@@ -161,6 +171,75 @@
             @if($videos->hasPages())
                 <div class="mt-8">
                     {{ $videos->links() }}
+                </div>
+            @endif
+
+        @elseif($activeTab === 'images')
+            <!-- Images Tab -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                @forelse($images as $image)
+                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group">
+                        <a href="{{ route('images.show', $image) }}" class="block">
+                            <!-- Thumbnail -->
+                            <div class="relative aspect-square bg-gray-100 rounded-t-lg overflow-hidden">
+                                <img src="{{ $image->getThumbnailUrl() }}" 
+                                     alt="{{ $image->title }}" 
+                                     class="w-full h-full object-cover">
+                                
+                                <!-- Image Icon -->
+                                <div class="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Image Info -->
+                            <div class="p-3">
+                                <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 leading-5 mb-1">
+                                    {{ $image->title }}
+                                </h3>
+                                <div class="flex items-center text-xs text-gray-500 space-x-1">
+                                    <span>{{ $image->getFormattedViews() }}</span>
+                                    <span>•</span>
+                                    <span>{{ $image->getTimeAgo() }}</span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Edit Button (Only for Channel Owner) -->
+                        @auth
+                            @if(auth()->id() === $user->id)
+                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{{ route('images.edit', $image) }}" 
+                                       class="inline-flex items-center justify-center w-8 h-8 bg-black bg-opacity-75 text-white rounded-full hover:bg-opacity-100 transition-all"
+                                       title="Edit image"
+                                       onclick="event.stopPropagation();">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </a>
+                                </div>
+                            @endif
+                        @endauth
+                    </div>
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900">No images</h3>
+                            <p class="text-gray-500">This channel hasn't uploaded any images yet.</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Pagination -->
+            @if($images->hasPages())
+                <div class="mt-8">
+                    {{ $images->links() }}
                 </div>
             @endif
 
