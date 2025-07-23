@@ -25,12 +25,11 @@ class VideoWatch extends Component
 
     public function mount($video = null, $token = null)
     {
-        // Check if this is a shared view (accessed via /share/{token} route)
-        $this->isSharedView = request()->routeIs('videos.share');
+        $this->isSharedView = request()->routeIs('share.video');
         
         if ($this->isSharedView) {
             // Handle shared view with token
-            $token = $token ?? request()->route('token');
+            $token = $token ?: request()->route('token');
             
             if (!$token) {
                 abort(404, 'Share token required');

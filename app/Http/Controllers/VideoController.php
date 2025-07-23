@@ -550,8 +550,8 @@ class VideoController extends Controller
                 abort(404, 'Video not found');
             }
             
-            $embedUrl = route('videos.share.embed', ['token' => $token]);
-            $thumbnailUrl = route('videos.share.thumbnail', ['token' => $token]);
+            $embedUrl = route('share.video.embed', ['token' => $token]);
+            $thumbnailUrl = route('share.video.thumbnail', ['token' => $token]);
             
             $response = [
                 'version' => '1.0',

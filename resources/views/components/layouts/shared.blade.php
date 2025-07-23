@@ -20,8 +20,8 @@
     <meta property="og:site_name" content="{{ \App\Models\SiteSetting::get('site_title', 'Open Media Platform') }}">
     
     <!-- Video-specific Open Graph tags -->
-    <meta property="og:video" content="{{ route('videos.share.raw', ['token' => $video->share_token]) }}">
-    <meta property="og:video:secure_url" content="{{ route('videos.share.raw', ['token' => $video->share_token]) }}">
+    <meta property="og:video" content="{{ route('share.video.raw', ['token' => $video->share_token]) }}">
+    <meta property="og:video:secure_url" content="{{ route('share.video.raw', ['token' => $video->share_token]) }}">
     <meta property="og:video:type" content="video/mp4">
     <meta property="og:video:width" content="1280">
     <meta property="og:video:height" content="720">
@@ -30,8 +30,8 @@
     @endif
     
     <!-- Thumbnail/Image -->
-    <meta property="og:image" content="{{ route('videos.share.thumbnail', ['token' => $video->share_token]) }}">
-    <meta property="og:image:secure_url" content="{{ route('videos.share.thumbnail', ['token' => $video->share_token]) }}">
+    <meta property="og:image" content="{{ route('share.video.thumbnail', ['token' => $video->share_token]) }}">
+    <meta property="og:image:secure_url" content="{{ route('share.video.thumbnail', ['token' => $video->share_token]) }}">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
@@ -41,16 +41,16 @@
     <meta name="twitter:card" content="player">
     <meta name="twitter:title" content="{{ $video->title }}">
     <meta name="twitter:description" content="{{ Str::limit($video->description ?? 'Watch this video on ' . \App\Models\SiteSetting::get('site_title', 'Open Media Platform'), 200) }}">
-    <meta name="twitter:image" content="{{ route('videos.share.thumbnail', ['token' => $video->share_token]) }}">
+    <meta name="twitter:image" content="{{ route('share.video.thumbnail', ['token' => $video->share_token]) }}">
     <meta name="twitter:player" content="{{ url('/share/' . $video->share_token . '/embed') }}">
     <meta name="twitter:player:width" content="1280">
     <meta name="twitter:player:height" content="720">
-    <meta name="twitter:player:stream" content="{{ route('videos.share.raw', ['token' => $video->share_token]) }}">
+    <meta name="twitter:player:stream" content="{{ route('share.video.raw', ['token' => $video->share_token]) }}">
     <meta name="twitter:player:stream:content_type" content="video/mp4">
     
     <!-- Additional Video Meta Tags -->
-    <meta name="video" content="{{ route('videos.share.raw', ['token' => $video->share_token]) }}">
-    <meta name="thumbnail" content="{{ route('videos.share.thumbnail', ['token' => $video->share_token]) }}">
+    <meta name="video" content="{{ route('share.video.raw', ['token' => $video->share_token]) }}">
+    <meta name="thumbnail" content="{{ route('share.video.thumbnail', ['token' => $video->share_token]) }}">
     
     <!-- Schema.org structured data -->
     <script type="application/ld+json">
@@ -59,9 +59,9 @@
       "@type": "VideoObject",
       "name": "{{ $video->title }}",
       "description": "{{ $video->description ?? 'Watch this video on ' . \App\Models\SiteSetting::get('site_title', 'Open Media Platform') }}",
-      "thumbnailUrl": "{{ route('videos.share.thumbnail', ['token' => $video->share_token]) }}",
+      "thumbnailUrl": "{{ route('share.video.thumbnail', ['token' => $video->share_token]) }}",
       "uploadDate": "{{ $video->created_at->toISOString() }}",
-      "contentUrl": "{{ route('videos.share.raw', ['token' => $video->share_token]) }}",
+      "contentUrl": "{{ route('share.video.raw', ['token' => $video->share_token]) }}",
       "embedUrl": "{{ url('/share/' . $video->share_token . '/embed') }}",
       @if($video->duration)
       "duration": "PT{{ $video->duration }}S",

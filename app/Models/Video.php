@@ -458,7 +458,7 @@ class Video extends Model
             return null;
         }
 
-        return route('videos.share', ['token' => $this->share_token]);
+        return route('share.video', ['token' => $this->share_token]);
     }
 
     public function revokeShare(): void

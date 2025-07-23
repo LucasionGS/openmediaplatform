@@ -24,15 +24,31 @@ Route::get('/login', LoginComponent::class)->name('login');
 Route::get('/register', RegisterComponent::class)->name('register');
 Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
-// Public share route (no authentication required)
-Route::get('/share/{token}', VideoWatch::class)->name('videos.share');
+// Public share routes (no authentication required)
+Route::get('/share/{token}', function ($token) {
+    // Determine if token belongs to video or image
+    $video = \App\Models\Video::findByShareToken($token);
+    if ($video) {
+        return app(VideoWatch::class);
+    }
+    
+    $image = \App\Models\Image::findByShareToken($token);
+    if ($image) {
+        return app(ImageViewPage::class);
+    }
+    
+    abort(404, 'Shared content not found');
+})->name('share');
 
-// Public video assets for shared videos (no authentication required)
-Route::get('/share/{token}/raw', [VideoController::class, "shareRaw"])->name('videos.share.raw');
-Route::get('/share/{token}/thumbnail.jpg', [VideoController::class, "shareThumbnail"])->name('videos.share.thumbnail');
+// Video share routes
+Route::get('/share/video/{token}', VideoWatch::class)->name('share.video');
+Route::get('/share/video/{token}/raw', [VideoController::class, "shareRaw"])->name('share.video.raw');
+Route::get('/share/video/{token}/thumbnail.jpg', [VideoController::class, "shareThumbnail"])->name('share.video.thumbnail');
+Route::get('/share/video/{token}/embed', [VideoController::class, "shareEmbed"])->name('share.video.embed');
 
-// Embed route for social media players
-Route::get('/share/{token}/embed', [VideoController::class, "shareEmbed"])->name('videos.share.embed');
+// Image share routes
+Route::get('/share/image/{token}', ImageViewPage::class)->name('share.image');
+Route::get('/share/image/{token}/{filename}', [ImageController::class, "shareRaw"])->name('share.image.raw');
 
 // oEmbed endpoint for rich embeds
 Route::get('/oembed', [VideoController::class, "oEmbed"])->name('oembed');
@@ -69,7 +85,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/images/{image}/{filename}', [ImageController::class, "serveFile"])->name('images.file');
     Route::put('/images/{image}', [ImageController::class, "update"])->name('images.update')->middleware('auth');
     Route::delete('/images/{image}', [ImageController::class, "destroy"])->name('images.destroy')->middleware('auth');
-    Route::get('/shared/images/{shareToken}', [ImageController::class, "shareRaw"])->name('images.share.raw');
     
     // Channel routes
     Route::get('/channel/{user}', ChannelPage::class)->name('channel.show');

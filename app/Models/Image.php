@@ -278,8 +278,7 @@ class Image extends Model
             return null;
         }
         
-        // Will create this route later
-        return url('/share/image/' . $this->share_token);
+        return route('share.image', ['token' => $this->share_token]);
     }
 
     public function revokeShare()

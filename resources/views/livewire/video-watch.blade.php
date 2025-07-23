@@ -17,11 +17,10 @@
         <div class="{{ $isSharedView ? '' : 'lg:col-span-2' }}">
             <!-- Video Player -->
             <div class="bg-black rounded-lg overflow-hidden">
-                <livewire:video-player 
-                    :video="$isSharedView ? null : $video"
-                    :video-src="$isSharedView ? route('videos.share.raw', ['token' => $video->share_token]) : route('videos.raw', $video)"
-                    :video-title="$video->title"
-                    :poster="$isSharedView ? route('videos.share.thumbnail', ['token' => $video->share_token]) : $video->getThumbnailUrl()"
+                <livewire:video-player
+                    :video-src="$isSharedView ? route('share.video.raw', ['token' => $video->share_token]) : route('videos.raw', $video)"
+                    :video-id="$video->id"
+                    :poster="$isSharedView ? route('share.video.thumbnail', ['token' => $video->share_token]) : $video->getThumbnailUrl()"
                     :autoplay="false"
                     :muted="false" />
             </div>

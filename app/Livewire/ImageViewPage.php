@@ -20,15 +20,47 @@ class ImageViewPage extends Component
     public $isSubscribed = false;
     public $showShareModal = false;
     public $currentImageIndex = 0;
+    public $isSharedView = false;
 
-    public function mount(Image $image)
+    public function mount($image = null, $token = null)
     {
-        // Check if user can view this image
-        if (!$image->canView(auth()->user())) {
-            abort(404, 'Image not found');
+        // Check if this is a shared view (accessed via /share/image/{token} route)
+        $this->isSharedView = request()->routeIs('share.image');
+        
+        if ($this->isSharedView) {
+            // Handle shared view with token
+            $token = $token ?: request()->route('token');
+            
+            if (!$token) {
+                abort(404, 'Share token required');
+            }
+            
+            $foundImage = Image::findByShareToken($token);
+            
+            if (!$foundImage) {
+                return abort(404, 'Shared image not found or share link has expired');
+            }
+            
+            $this->image = $foundImage;
+            
+            // If user is logged in and accessing shared link, redirect to regular view page
+            if (auth()->check() && $this->image->canView(auth()->user())) {
+                return redirect()->route('images.show', $this->image);
+            }
+        } else {
+            // Regular view - ensure image is passed and user can view it
+            if (!$image) {
+                abort(404, 'Image not found');
+            }
+            
+            if (!$image->canView(auth()->user())) {
+                abort(404, 'Image not found');
+            }
+            
+            $this->image = $image;
         }
 
-        $this->image = $image->load(['user', 'imageFiles', 'comments.user']);
+        $this->image->load(['user', 'imageFiles', 'comments.user']);
         
         // Record view
         $this->recordView();
@@ -175,24 +207,51 @@ class ImageViewPage extends Component
         }
     }
 
+    public function openShareModal()
+    {
+        $this->showShareModal = true;
+    }
+
+    public function closeShareModal()
+    {
+        $this->showShareModal = false;
+    }
+
     public function generateShareLink()
     {
-        if (!Auth::check() || Auth::id() !== $this->image->user_id) {
-            abort(403, 'Unauthorized');
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
 
-        $this->image->generateShareToken();
-        $this->showShareModal = true;
+        // Only image owner can generate share links
+        if (Auth::id() !== $this->image->user_id) {
+            session()->flash('error', 'Only the image owner can create share links.');
+            return;
+        }
+
+        if (!$this->image->share_token) {
+            $this->image->generateShareToken();
+        }
+
+        session()->flash('success', 'Share link generated successfully!');
     }
 
     public function revokeShareLink()
     {
-        if (!Auth::check() || Auth::id() !== $this->image->user_id) {
-            abort(403, 'Unauthorized');
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        // Only image owner can revoke share links
+        if (Auth::id() !== $this->image->user_id) {
+            session()->flash('error', 'Only the image owner can revoke share links.');
+            return;
         }
 
         $this->image->revokeShare();
         $this->showShareModal = false;
+
+        session()->flash('success', 'Share link revoked successfully!');
     }
 
     public function nextImage()

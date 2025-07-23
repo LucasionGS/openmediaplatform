@@ -118,9 +118,9 @@
         <video class="video-player" 
                controls 
                preload="metadata"
-               poster="{{ route('videos.share.thumbnail', ['token' => $token]) }}"
+               poster="{{ route('share.video.thumbnail', ['token' => $token]) }}"
                aria-label="{{ $video->title }}">
-            <source src="{{ route('videos.share.raw', ['token' => $token]) }}" type="video/mp4">
+            <source src="{{ route('share.video.raw', ['token' => $token]) }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         
