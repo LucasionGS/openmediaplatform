@@ -67,8 +67,8 @@ return new class extends Migration
         // Update comments table to support polymorphic relationships
         // This allows comments on both videos and images
         Schema::table('comments', function (Blueprint $table) {
-            // Add polymorphic columns
-            $table->unsignedBigInteger('commentable_id')->after('user_id');
+            // Add polymorphic columns - use string for commentable_id to match video vid and image iid
+            $table->string('commentable_id', 36)->after('user_id');
             $table->string('commentable_type')->after('commentable_id');
             
             // Index for polymorphic relationship
@@ -94,7 +94,7 @@ return new class extends Migration
     {
         // Restore comments table structure
         Schema::table('comments', function (Blueprint $table) {
-            $table->string('video_id')->after('user_id');
+            $table->string('video_id', 36)->after('user_id');
             $table->foreign('video_id')->references('vid')->on('videos')->onDelete('cascade');
         });
 
