@@ -94,16 +94,9 @@
                                 name="category"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors">
                             <option value="">Select a category</option>
-                            <option value="music">Music</option>
-                            <option value="gaming">Gaming</option>
-                            <option value="sports">Sports</option>
-                            <option value="news">News</option>
-                            <option value="entertainment">Entertainment</option>
-                            <option value="education">Education</option>
-                            <option value="technology">Technology</option>
-                            <option value="travel">Travel</option>
-                            <option value="food">Food</option>
-                            <option value="lifestyle">Lifestyle</option>
+                            @foreach($videoCategories as $category)
+                                <option value="{{ $category->slug }}">{{ $category->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>

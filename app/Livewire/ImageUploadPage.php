@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\SiteSetting;
+use App\Models\Category;
 use App\Traits\HandlesUploadLimits;
 use Livewire\Component;
 use Livewire\Attributes\Title;
@@ -15,6 +16,7 @@ class ImageUploadPage extends Component
     public $maxImageSize;        // KB
     public $maxImageSizeMB;      // MB for display
     public $maxImageCount;
+    public $imageCategories;     // Available categories for images
 
     public function mount()
     {
@@ -27,6 +29,9 @@ class ImageUploadPage extends Component
         $this->maxImageSize = (int) SiteSetting::get('max_image_size', 10240);     // KB, default 10MB
         $this->maxImageCount = (int) SiteSetting::get('max_image_count', 50);      // files, default 50
         $this->maxImageSizeMB = number_format($this->maxImageSize / 1024, 1);      // Convert to MB for display
+        
+        // Load image categories
+        $this->imageCategories = Category::getImageCategories();
     }
 
     public function render()

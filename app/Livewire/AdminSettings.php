@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Models\Category;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -24,6 +25,16 @@ class AdminSettings extends Component
     public int $maxImageSize = 10240; // KB (10MB default)
     public int $maxImageCount = 50;   // Maximum images per post
     
+    // Category management properties
+    public $categories;
+    public $editingCategoryId = null;
+    public $categoryName = '';
+    public $categorySlug = '';
+    public $categoryDescription = '';
+    public $categoryIsActive = true;
+    public $categorySortOrder = 0;
+    public $showCategoryModal = false;
+    
     // User management properties
     public $search = '';
     public $roleFilter = '';
@@ -38,6 +49,11 @@ class AdminSettings extends Component
         'editingUserRole' => 'required|in:admin,moderator,user',
         'maxImageSize' => 'required|integer|min:1|max:102400', // 1KB to 100MB
         'maxImageCount' => 'required|integer|min:1|max:100',   // 1 to 100 images
+        'categoryName' => 'required|string|max:255',
+        'categorySlug' => 'required|string|max:255|alpha_dash',
+        'categoryDescription' => 'nullable|string|max:500',
+        'categoryIsActive' => 'boolean',
+        'categorySortOrder' => 'required|integer|min:0|max:999',
     ];
 
     protected $messages = [
@@ -55,6 +71,16 @@ class AdminSettings extends Component
         'maxImageCount.integer' => 'Maximum image count must be a number.',
         'maxImageCount.min' => 'Maximum image count must be at least 1.',
         'maxImageCount.max' => 'Maximum image count cannot exceed 100.',
+        'categoryName.required' => 'Category name is required.',
+        'categoryName.max' => 'Category name cannot exceed 255 characters.',
+        'categorySlug.required' => 'Category slug is required.',
+        'categorySlug.max' => 'Category slug cannot exceed 255 characters.',
+        'categorySlug.alpha_dash' => 'Category slug can only contain letters, numbers, dashes, and underscores.',
+        'categoryDescription.max' => 'Category description cannot exceed 500 characters.',
+        'categorySortOrder.required' => 'Sort order is required.',
+        'categorySortOrder.integer' => 'Sort order must be a number.',
+        'categorySortOrder.min' => 'Sort order must be at least 0.',
+        'categorySortOrder.max' => 'Sort order cannot exceed 999.',
     ];
 
     protected $listeners = ['refreshUsers' => '$refresh'];
@@ -73,6 +99,9 @@ class AdminSettings extends Component
         // Load upload limit settings with defaults
         $this->maxImageSize = (int) SiteSetting::get('max_image_size', 10240); // 10MB default
         $this->maxImageCount = (int) SiteSetting::get('max_image_count', 50);   // 50 images default
+        
+        // Load categories
+        $this->loadCategories();
     }
 
     public function setActiveTab($tab)
@@ -136,6 +165,106 @@ class AdminSettings extends Component
         SiteSetting::set('max_image_count', $this->maxImageCount, 'integer', 'Maximum number of images per post');
 
         $this->dispatch('show-message', ['type' => 'success', 'message' => 'Upload limits updated successfully!']);
+    }
+
+    // Category Management Methods
+    public function loadCategories()
+    {
+        $this->categories = Category::orderBy('sort_order')->orderBy('name')->get();
+    }
+
+    public function openCategoryModal($categoryId = null)
+    {
+        if ($categoryId) {
+            $category = Category::find($categoryId);
+            $this->editingCategoryId = $categoryId;
+            $this->categoryName = $category->name;
+            $this->categorySlug = $category->slug;
+            $this->categoryDescription = $category->description;
+            $this->categoryIsActive = $category->is_active;
+            $this->categorySortOrder = $category->sort_order;
+        } else {
+            $this->resetCategoryForm();
+        }
+        
+        $this->showCategoryModal = true;
+    }
+
+    public function resetCategoryForm()
+    {
+        $this->editingCategoryId = null;
+        $this->categoryName = '';
+        $this->categorySlug = '';
+        $this->categoryDescription = '';
+        $this->categoryIsActive = true;
+        $this->categorySortOrder = 0;
+        $this->resetValidation(['categoryName', 'categorySlug', 'categoryDescription', 'categorySortOrder']);
+    }
+
+    public function saveCategory()
+    {
+        $this->validate([
+            'categoryName' => 'required|string|max:255',
+            'categorySlug' => 'required|string|max:255|alpha_dash',
+            'categoryDescription' => 'nullable|string|max:500',
+            'categorySortOrder' => 'required|integer|min:0|max:999',
+        ]);
+
+        // Check for unique slug
+        $existingCategory = Category::where('slug', $this->categorySlug)
+                                   ->when($this->editingCategoryId, function ($query) {
+                                       return $query->where('id', '!=', $this->editingCategoryId);
+                                   })
+                                   ->first();
+
+        if ($existingCategory) {
+            $this->addError('categorySlug', 'This slug already exists.');
+            return;
+        }
+
+        $categoryData = [
+            'name' => $this->categoryName,
+            'slug' => $this->categorySlug,
+            'description' => $this->categoryDescription,
+            'is_active' => $this->categoryIsActive,
+            'sort_order' => $this->categorySortOrder,
+        ];
+
+        if ($this->editingCategoryId) {
+            Category::find($this->editingCategoryId)->update($categoryData);
+            $message = 'Category updated successfully!';
+        } else {
+            Category::create($categoryData);
+            $message = 'Category created successfully!';
+        }
+
+        $this->loadCategories();
+        $this->showCategoryModal = false;
+        $this->resetCategoryForm();
+        $this->dispatch('show-message', ['type' => 'success', 'message' => $message]);
+    }
+
+    public function deleteCategory($categoryId)
+    {
+        $category = Category::find($categoryId);
+        
+        if ($category) {
+            $category->delete();
+            $this->loadCategories();
+            $this->dispatch('show-message', ['type' => 'success', 'message' => 'Category deleted successfully!']);
+        }
+    }
+
+    public function toggleCategoryStatus($categoryId)
+    {
+        $category = Category::find($categoryId);
+        
+        if ($category) {
+            $category->update(['is_active' => !$category->is_active]);
+            $this->loadCategories();
+            $status = $category->is_active ? 'activated' : 'deactivated';
+            $this->dispatch('show-message', ['type' => 'success', 'message' => "Category {$status} successfully!"]);
+        }
     }
 
     // User Management Methods

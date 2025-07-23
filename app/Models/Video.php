@@ -416,17 +416,20 @@ class Video extends Model
     // Category helpers
     public static function getAvailableCategories(): array
     {
-        return [
-            'music' => 'Music',
-            'gaming' => 'Gaming', 
-            'news' => 'News',
-            'sports' => 'Sports',
-            'education' => 'Education',
-            'entertainment' => 'Entertainment',
-            'technology' => 'Technology',
-            'lifestyle' => 'Lifestyle',
-            'other' => 'Other'
-        ];
+        // Get shared categories from database
+        $categories = \App\Models\Category::getActive();
+        
+        // Convert to the expected format (slug => name)
+        $result = [];
+        foreach ($categories as $category) {
+            $result[$category->slug] = $category->name;
+        }
+        
+        if (empty($result)) {
+            return [];
+        }
+        
+        return $result;
     }
 
     public function getFormattedCategory(): string

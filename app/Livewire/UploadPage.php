@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Category;
 use App\Traits\HandlesUploadLimits;
 use Livewire\Component;
 use Livewire\Attributes\Title;
@@ -13,6 +14,7 @@ class UploadPage extends Component
     
     public $maxUploadSize;
     public $maxUploadSizeFormatted;
+    public $videoCategories;     // Available categories for videos
 
     public function mount()
     {
@@ -24,6 +26,9 @@ class UploadPage extends Component
         // Get upload limits from PHP configuration
         $this->maxUploadSize = $this->getMaxUploadSize();
         $this->maxUploadSizeFormatted = $this->formatBytes($this->maxUploadSize);
+        
+        // Load video categories
+        $this->videoCategories = Category::getVideoCategories();
     }
 
     public function render()

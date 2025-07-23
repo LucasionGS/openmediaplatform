@@ -13,7 +13,7 @@
         </div>
         
         <!-- Category Filter -->
-        <div class="flex space-x-1 overflow-x-auto pb-2">
+        <div class="flex space-x-1 space-y-1 overflow-x-auto pb-2 flex-wrap">
             @foreach($categories as $key => $label)
                 <button wire:click="$set('selectedCategory', '{{ $key }}')" 
                         class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors

@@ -185,6 +185,11 @@ class Image extends Model
                     ->where('published_at', '<=', now());
     }
 
+    public function scopeByCategory($query, $category)
+    {
+        return $query->where('category', $category);
+    }
+
     public function scopeVisible($query, $userId = null)
     {
         return $query->where(function ($q) use ($userId) {
@@ -308,5 +313,24 @@ class Image extends Model
                             ->orWhere('share_expires_at', '>', now());
                   })
                   ->first();
+    }
+
+    /**
+     * Get available categories for images
+     * 
+     * @return array Array of category slug => name pairs
+     */
+    public static function getAvailableCategories()
+    {
+        // Get shared categories from database
+        $categories = Category::getActive()
+            ->pluck('name', 'slug')
+            ->toArray();
+
+        if (empty($categories)) {
+            return [];
+        }
+
+        return $categories;
     }
 }

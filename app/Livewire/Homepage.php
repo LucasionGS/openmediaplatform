@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Video;
 use App\Models\Image;
 use App\Models\User;
+use App\Models\Category;
 
 class Homepage extends Component
 {
@@ -151,9 +152,13 @@ class Homepage extends Component
         );
 
         $categories = [
-            'all' => 'All',
-            ...Video::getAvailableCategories()
+            'all' => 'All'
         ];
+
+        // Add shared categories (used by both images and videos)
+        foreach (Category::getActive() as $category) {
+            $categories[$category->slug] = $category->name;
+        }
 
         $types = [
             'all' => 'All Media',

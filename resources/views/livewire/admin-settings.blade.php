@@ -43,6 +43,14 @@
                         Upload Limits
                     </button>
                     <button 
+                        wire:click="setActiveTab('categories')"
+                        class="py-2 border-b-2 font-medium text-sm transition-colors
+                               {{ $activeTab === 'categories' 
+                                  ? 'border-red-600 text-red-600' 
+                                  : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                        Categories
+                    </button>
+                    <button 
                         wire:click="setActiveTab('users')"
                         class="py-2 border-b-2 font-medium text-sm transition-colors
                                {{ $activeTab === 'users' 
@@ -228,6 +236,188 @@
                     </div>
                 </form>
             </div>
+
+        @elseif($activeTab === 'categories')
+            <!-- Categories Management -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Categories Management</h2>
+                    <button 
+                        wire:click="openCategoryModal()"
+                        class="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors">
+                        Add New Category
+                    </button>
+                </div>
+                
+                <!-- Categories Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sort Order</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($categories as $category)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ $category->name }}</div>
+                                        @if($category->description)
+                                            <div class="text-sm text-gray-500">{{ Str::limit($category->description, 50) }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <code class="bg-gray-100 px-2 py-1 rounded">{{ $category->slug }}</code>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                     {{ $category->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $category->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $category->sort_order }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end space-x-2">
+                                            <button 
+                                                wire:click="openCategoryModal({{ $category->id }})"
+                                                class="text-indigo-600 hover:text-indigo-900 transition-colors">
+                                                Edit
+                                            </button>
+                                            <button 
+                                                wire:click="toggleCategoryStatus({{ $category->id }})"
+                                                class="text-yellow-600 hover:text-yellow-900 transition-colors">
+                                                {{ $category->is_active ? 'Deactivate' : 'Activate' }}
+                                            </button>
+                                            <button 
+                                                wire:click="deleteCategory({{ $category->id }})"
+                                                wire:confirm="Are you sure you want to delete this category?"
+                                                class="text-red-600 hover:text-red-900 transition-colors">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                        No categories found. <button wire:click="openCategoryModal()" class="text-red-600 hover:underline">Add the first one</button>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Category Modal -->
+            @if($showCategoryModal)
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <h3 class="text-lg font-semibold mb-4">
+                            {{ $editingCategoryId ? 'Edit Category' : 'Add New Category' }}
+                        </h3>
+                        
+                        <form wire:submit.prevent="saveCategory" class="space-y-4">
+                            <!-- Category Name -->
+                            <div>
+                                <label for="categoryName" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                <input 
+                                    type="text" 
+                                    id="categoryName"
+                                    wire:model="categoryName"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+                                    placeholder="Enter category name"
+                                    required
+                                >
+                                @error('categoryName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Category Slug -->
+                            <div>
+                                <label for="categorySlug" class="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+                                <input 
+                                    type="text" 
+                                    id="categorySlug"
+                                    wire:model="categorySlug"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+                                    placeholder="category-slug"
+                                    required
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Used in URLs. Only letters, numbers, dashes, and underscores.</p>
+                                @error('categorySlug') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Category Description -->
+                            <div>
+                                <label for="categoryDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea 
+                                    id="categoryDescription"
+                                    wire:model="categoryDescription"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+                                    rows="3"
+                                    placeholder="Optional description"
+                                ></textarea>
+                                @error('categoryDescription') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Sort Order -->
+                            <div>
+                                <label for="categorySortOrder" class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+                                <input 
+                                    type="number" 
+                                    id="categorySortOrder"
+                                    wire:model="categorySortOrder"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+                                    min="0"
+                                    max="999"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Lower numbers appear first (0-999)</p>
+                                @error('categorySortOrder') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    id="categoryIsActive"
+                                    wire:model="categoryIsActive"
+                                    class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                                >
+                                <label for="categoryIsActive" class="ml-2 block text-sm text-gray-700">
+                                    Active (visible to users)
+                                </label>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button 
+                                    type="button"
+                                    wire:click="$set('showCategoryModal', false)"
+                                    class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                                    wire:loading.attr="disabled"
+                                >
+                                    <span wire:loading.remove wire:target="saveCategory">
+                                        {{ $editingCategoryId ? 'Update' : 'Create' }}
+                                    </span>
+                                    <span wire:loading wire:target="saveCategory">Saving...</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
 
         @elseif($activeTab === 'users')
             <!-- User Management -->

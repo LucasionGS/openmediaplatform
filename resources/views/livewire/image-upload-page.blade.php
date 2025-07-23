@@ -87,18 +87,9 @@
                                 name="category"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                             <option value="">Select a category</option>
-                            <option value="art">Art & Design</option>
-                            <option value="photography">Photography</option>
-                            <option value="nature">Nature</option>
-                            <option value="technology">Technology</option>
-                            <option value="food">Food & Cooking</option>
-                            <option value="travel">Travel</option>
-                            <option value="lifestyle">Lifestyle</option>
-                            <option value="sports">Sports</option>
-                            <option value="entertainment">Entertainment</option>
-                            <option value="education">Education</option>
-                            <option value="business">Business</option>
-                            <option value="other">Other</option>
+                            @foreach($imageCategories as $category)
+                                <option value="{{ $category->slug }}">{{ $category->name }}</option>
+                            @endforeach
                         </select>
                         @error('category')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
